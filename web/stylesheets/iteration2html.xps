@@ -1,0 +1,182 @@
+<%
+
+$t->{title}{showtag} = 0;
+
+%>
+<html>
+<head>
+<TITLE>perlwar : <%= apply_templates( '/perlwar/configuration/title' ) %></TITLE>
+<style>
+
+.score {
+    left : 95px;
+    position : absolute;
+  }
+
+
+.slotCode {
+    visibility: hidden;
+  }
+
+
+.log {
+    visibility: visible;
+  }
+
+
+.slot {
+    background : #3972b0;
+    font : 8pt sans-serif;
+    padding : 3px;
+    margin : 3px;
+    float : left;
+    height : 12px;
+    overflow : hidden;
+    position : static;
+    vertical-align : middle;
+    text-align: center;
+    white-space : pre;
+    width : 30px;
+    z-index : 0;
+  }
+
+
+.activeSlot {
+    background : #3972b0;
+    font : 10pt serif;
+    padding : 3px;
+    margin : 3px;
+    float : left;
+    height : 150px;
+    overflow : scroll;
+    position : static;
+    white-space : pre;
+    width : 150px;
+    z-index: 1;
+  }
+
+
+.summary {
+    border : solid 1;
+    width: 200px;
+    top: 100px;
+  }
+
+
+.deadPlayer {
+    text-decoration : line-through;
+  }
+
+
+.leftSide {
+    position: absolute;
+    top: 100px;
+    left: 220px;
+    width: 600px;
+    border: dotted 1;
+  }
+
+
+.theArray {
+  }
+
+
+.console {
+    background : black;
+    border-style : dotted;
+    clear : both;
+    color : #90ee90;
+    height : 100px;
+  }
+
+</style>
+</head>
+<div>
+
+<h1>PerlWar : <%= apply_templates( '/perlwar/configuration/title' ) %></h1>
+
+<div class="rightSide">
+
+<div class="summary">
+<div align="center">iteration <%= findvalue( '/perlwar/round/@id' )  %></a></div>
+<br/>
+<%
+	my %players;
+	$players{''} = { color => 'lightgrey' };
+	for( findnodes( '/perlwar/configuration/player' ) )
+	{
+		my $name = $_->getAttribute( 'name' );
+		$players{ $name  } = { color => $_->getAttribute( 'color' ) };
+		$players{ $name }{status} = $_->getAttribute( 'status' );
+		$players{ $names }{score} = 0;
+	}
+
+	for( findnodes( '/perlwar/round/theArray/slot/owner' ) )
+	{
+		my $player = $_->findvalue( './text()' );
+		$players{$player}{score}++;
+	}
+
+%>
+
+<!-- TODO: add submission time information -->
+<% for( sort { $players{$b}{score} <=> $players{$a}{score} } keys %players ) { 
+	next unless $_;  %> <!--  remove the blank player    -->
+	<div style="color: <%= $players{$_}{color} %>"
+		<% if( $players{$_}{status} eq 'EOT' ) { %> 
+			class="deadPlayer" 
+		<% } %> 
+	>
+	<%= $_ %> <span class="score"><%= $players{$_}{score} %></span>
+	</div>
+<% } %>
+
+</div>
+
+<div>
+<a>game settings</a><br/>
+<a>iteration log</a>
+<a>submit agent</a><br/>
+<br/>
+
+<form>
+history<br/>
+<a>iteration 
+<SELECT name="history">
+<% for( 1..findvalue( '/perlwar/configuration/@currentIteration' ) ) { %>
+	<option><%= $_ %></option> <% } %>
+</SELECT></a>  <INPUT type="submit" value="access">
+
+</form>
+<br/>
+<br/>
+<a>what is perlwar?</a>
+
+</div>
+
+</div>
+
+<div class="leftSide">
+<div class="theArray" style="clear: both;">
+<% 
+
+my $fill = length findvalue( '/perlwar/configuration/@theArraySize' );
+
+for( 0..findvalue( '/perlwar/configuration/@theArraySize' ) -1 ) { %>
+	<div class="slot" style='background-color: <%= $players{ findvalue( "/perlwar/round/theArray/slot[\@id = $_]/owner/text()" ) }{color} %>'><%=  sprintf "%0${fill}d", $_ %></div>	
+<% } %>
+
+</div>
+<div style="clear: both;height:10px"></div>
+
+<div class="console">
+<div class='log'><%= findvalue( '/perlwar/round/log/text()' ) %></div>
+<% for( 0..findvalue( '/perlwar/configuration/@theArraySize' ) -1 ) { %>
+	<div class="slotCode" id='<%= $_ %>'><%= findvalue( "/perlwar/round/theArray/slot[\@id = $_]/code/text()" ) %></div>	
+<% } %>
+</div>
+
+</div>
+
+</body>
+</html>
