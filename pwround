@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+=pod
+
+	usage: pwround $game_dir
+
+=cut
+
+use strict;
+use warnings;
+
+require 'PerlWar.pm';
+
+my $pw = new Games::PerlWar( 'game' );
+
+$pw->play_round;

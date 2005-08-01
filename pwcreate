@@ -1,0 +1,72 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use XML::Simple;
+
+my $game_name = "game";
+my $game_dir = "./$game_name";
+
+print "creating game directories $game_dir.. ";
+
+mkdir $game_dir or die "couldn't create directory $game_dir: $!\n";
+mkdir "$game_dir/history" or die "couldn't create directory $game_dir/history:$!\n";
+mkdir "$game_dir/atrium" or die "couldn't create directory $game_dir/atrium:$!\n";
+
+print "\n\ngame configuration\n";
+my %conf;
+
+
+my $input;
+print "game title [$game_name]: ";
+chomp( $input = <> );
+
+$conf{title} = $input || $game_name;
+
+print "Arrayna size [100]: ";
+chomp( $input = <> );
+$conf{arraynaSize} = $input || 100;
+
+print "game length (0 = open-ended game) [100]: ";
+chomp( $input = <> );
+$conf{gameLength} = length($input) ? $input : 100;
+
+print "snippet max. length [100]: ";
+chomp( $input = <> );
+$conf{snippetMaxLength} = $input || 100;
+
+print "mambo game (0=no, any positive integer is taken as the decrement)[0]: ";
+chomp( $input = <> );
+$conf{mamboDecrement} = $input;
+
+my @players;
+$conf{player} = \@players;
+
+while(1)
+{
+	print "enter a player/password pair, or nothing if done: ";
+	my( $name, $password ) = split ' ', <> or last;
+		
+	push @players, { name => $name, password => $password };
+}
+
+print "notes (empty line to terminate):\n";
+$conf{note}{text} .= $_ while ($_ = <>) ne "\n";
+
+print "saving configuration.. ";
+
+XMLout( \%conf, OutputFile => "$game_dir/configuration.xml", RootName => 'configuration' );
+
+print "creating round 0.. \n";
+
+my $fh;
+open $fh, ">$game_dir/round_current.xml" or die "can't create file $game_dir/round_current.xml: $!\n";
+print $fh "<round id='0'><arrayna>\n";
+print $fh "<slot id='$_'><owner></owner><code></code></slot>\n" for 0..$conf{arraynaSize}-1;
+print $fh "</arrayna><log/></round>";
+close $fh;
+
+print "\ngame $game_name created\n";
+
+exit;
