@@ -37,16 +37,16 @@ sub load
 
 	$self->{round} = $xml->findvalue( '/round/@id' );
 	print "this is round $self->{round}\n";
-	my @arrayna;
-	$self->{arrayna} = \@arrayna;
-	for my $slot ( 0..$self->{conf}{arraynaSize}-1 )
+	my @theArray;
+	$self->{theArray} = \@theArray;
+	for my $slot ( 0..$self->{conf}{theArraySize}-1 )
 	{
 		my $owner = $xml->findvalue( "//slot[\@id=$slot]/owner/text()" );
 		my $code = $xml->findvalue( "//slot[\@id=$slot]/code/text()" );
 		print "$slot : $owner : $code\n";
 		if( $code )
 		{
-			$arrayna[ $slot ] = { owner => $owner, code => $code };
+			$theArray[ $slot ] = { owner => $owner, code => $code };
 		}
 	}
 }
@@ -80,7 +80,7 @@ sub play_round
 	$self->introduce_newcomers;
 	
 	# run each slot
-	for( 0..$self->{conf}{arraynaSize}-1 )
+	for( 0..$self->{conf}{theArraySize}-1 )
 	{
 		$self->runSlot( $_ );
 	}
@@ -115,12 +115,12 @@ sub save
   		$writer->endTag;
 	}
 
-	$writer->startTag( 'arrayna' );
-	for( 0..$self->{conf}{arraynaSize} )
+	$writer->startTag( 'theArray' );
+	for( 0..$self->{conf}{theArraySize} )
 	{
-		next unless $self->{arrayna}[$_];
+		next unless $self->{theArray}[$_];
   		$writer->startTag( 'slot', id => $_ );
-  		my %slot = %{ $self->{arrayna}[$_] };
+  		my %slot = %{ $self->{theArray}[$_] };
   		$writer->dataElement( owner => $slot{owner} );
   		$writer->dataElement( code => $slot{code} );
   		$writer->endTag;
@@ -146,7 +146,7 @@ sub introduce_newcomers
 	WARRIOR: for my $player ( @files )
 	{
 		my $date = localtime( -M $player );
-		$self->log( "$player sends a new code warrior in the arrayna ($date)" );
+		$self->log( "$player sends a new code warrior in the theArray ($date)" );
 		
 		my $fh;
 		my $code;
@@ -159,31 +159,31 @@ sub introduce_newcomers
 		
 		
 		my @available_slots;
-		for( 0..$self->{conf}{arraynaSize}-1 )
+		for( 0..$self->{conf}{theArraySize}-1 )
 		{
-			push @available_slots, $_ unless $self->{arrayna}[$_];
+			push @available_slots, $_ unless $self->{theArray}[$_];
 		}
 		$self->log( "there are ".scalar(@available_slots)." slots available" );
 		
 		if( @available_slots > 0 )
 		{
 			my $slot = $available_slots[ rand @available_slots ];
-			$self->log( "code warrior enters arrayna at slot $slot" );
-			$self->{arrayna}[$slot] = { owner => $player, code => $code };
+			$self->log( "code warrior enters theArray at slot $slot" );
+			$self->{theArray}[$slot] = { owner => $player, code => $code };
 			unlink $player or die;
 			next WARRIOR;
 		}
 		
-		for( 0..$self->{conf}{arraynaSize}-1 )
+		for( 0..$self->{conf}{theArraySize}-1 )
 		{
-			push @available_slots, $_ if $self->{arrayna}[$_]{owner} = $player;
+			push @available_slots, $_ if $self->{theArray}[$_]{owner} = $player;
 		}
 		
 		if( @available_slots > 0 )
 		{
 			my $slot = $available_slots[ rand @available_slots ];
-			$self->log( "code warrior bumps comrade and enters arrayna at slot $slot" );
-			$self->{arrayna}[$slot] = { owner => $player, code => $code };
+			$self->log( "code warrior bumps comrade and enters theArray at slot $slot" );
+			$self->{theArray}[$slot] = { owner => $player, code => $code };
 			unlink $player or die;
 			next WARRIOR;
 		}
@@ -209,16 +209,16 @@ sub runSlot
 {
   	my ( $self, $slotId ) = @_;
 
-	return unless $self->{arrayna}[ $slotId ];
+	return unless $self->{theArray}[ $slotId ];
 	
-	my %slot = %{$self->{arrayna}[ $slotId ]};
+	my %slot = %{$self->{theArray}[ $slotId ]};
 
 	return if $slot{freshly_copied} or not $slot{code};
 
 	$self->log( "slot $slotId: owned by $slot{owner}" ); 
 
   local @_;
-  @_ = map $_->{code}, @{$self->{arrayna}}[ $slotId..(@{$self->{arrayna}}-1), 0..($slotId-1) ];
+  @_ = map $_->{code}, @{$self->{theArray}}[ $slotId..(@{$self->{theArray}}-1), 0..($slotId-1) ];
   local $_;
   $_ = $slot{code};
  
@@ -226,7 +226,7 @@ sub runSlot
   if( length > $self->{conf}{snippetMaxLength} )
   {
     $self->log( "snippet crashed: is ".length($_)." chars, exceeds max permitted size $self->{conf}{snippetMaxSize}" ); 
-    $self->{arrayna}[ $slotId ] = {};
+    $self->{theArray}[ $slotId ] = {};
     return;
   }
 
@@ -247,7 +247,7 @@ sub runSlot
 
   if( $error ) {
     $self->log( "snippet crashed: $error" );
-    $self->{arrayna}[$slotId] = {};
+    $self->{theArray}[$slotId] = {};
   } else {
     $self->log( "result: $result" );
     if( $result =~ /^!(-?\d*)$/ )   # !613
@@ -261,7 +261,7 @@ sub runSlot
         $pos %= @_ if $pos >= @_;
         $pos += @_ if $pos < 0;
         $self->log( "Cell $pos of the Array nuked" );
-        $self->{arrayna}[ $pos ] = { };
+        $self->{theArray}[ $pos ] = { };
       }
     }
     elsif( $result =~ /^\^(-?\d*)$/ )  # ^613
@@ -271,7 +271,7 @@ sub runSlot
       return if $pos == -1;
 
       $self->log( "Cell $pos of the Array p0wned" );
-      $self->{arrayna}[$pos]{owner} = $self->{arrayna}[$slotId]{owner};
+      $self->{theArray}[$pos]{owner} = $self->{theArray}[$slotId]{owner};
     }
     elsif( $result =~ /^~(-?\d*)$/ )  # ~613
     {
@@ -279,7 +279,7 @@ sub runSlot
       my $pos = $self->relative_to_absolute_position( $slotId, $1 );
       return if $pos == -1;
 
-      $self->{arrayna}[$pos]{code} = $_[$relative];
+      $self->{theArray}[$pos]{code} = $_[$relative];
       $self->log( "Code of cell $pos updated" );
       
     }
@@ -294,16 +294,16 @@ sub runSlot
 
       return if $src_pos == -1 or $dest_pos == -1;
 
-      if( $self->{arrayna}[$dest_pos]{owner} and
-          $self->{arrayna}[$dest_pos]{owner} ne $self->{arrayna}[$slotId]{owner} ) 
+      if( $self->{theArray}[$dest_pos]{owner} and
+          $self->{theArray}[$dest_pos]{owner} ne $self->{theArray}[$slotId]{owner} ) 
       {
-        $self->log( "cell $dest_pos already owned by $self->{arrayna}[$dest_pos]{owner}" );
+        $self->log( "cell $dest_pos already owned by $self->{theArray}[$dest_pos]{owner}" );
         return;
       }
 
       $self->log( "Snippet in cell $src_pos copied into cell $dest_pos" );
-      $self->{arrayna}[$dest_pos] = \%{$self->{arrayna}[$src_pos]};
-      $self->{arrayna}[$dest_pos]{freshly_copied} = 1 ;
+      $self->{theArray}[$dest_pos] = \%{$self->{theArray}[$src_pos]};
+      $self->{theArray}[$dest_pos]{freshly_copied} = 1 ;
     }
 
   }
@@ -314,12 +314,12 @@ sub relative_to_absolute_position
   my( $self, $slotId, $shift ) = @_;
   $shift ||= 0;
 
-  if( abs( $shift ) > $self->{conf}{arraynaSize} ) {
+  if( abs( $shift ) > $self->{conf}{theArraySize} ) {
     $self->log( "position $shift out-of-bound" );
     return -1;
   }
-  $slotId += $shift + 2 * $self->{conf}{arraynaSize};
-  $slotId %= $self->{conf}{arraynaSize};
+  $slotId += $shift + 2 * $self->{conf}{theArraySize};
+  $slotId %= $self->{conf}{theArraySize};
 
   return $slotId;
 }
@@ -329,7 +329,7 @@ sub relative_to_absolute_position
 my $pw = new Games::PerlWar;
 
 $pw->{interactive} = 1;
-$pw->{arrayna} = [ { owner => 'Yanick', name => 'Neo', code => 'print "Hello world!"' },
+$pw->{theArray} = [ { owner => 'Yanick', name => 'Neo', code => 'print "Hello world!"' },
                     { owner => '1337 h4ck3r', name => 'crash me', code => 'exit' },
                     { owner => '1337 h4ck3r', name => 'readdir me', code => 'opendir DIR, "."; return readdir DIR;' },
                     { owner => '1337 h4ck3r', name => 'infinite loop', code => '1 while 1' },
@@ -340,7 +340,7 @@ $pw->{arrayna} = [ { owner => 'Yanick', name => 'Neo', code => 'print "Hello wor
                     { owner => 'Yanick', name => 'owner', code => '"~-1"' },
                     { owner => 'Yanick', name => 'too big', code => 'a' x 200 },
                     ];
-$pw->{config}{arraySize} = @{ $pw->{arrayna} };
+$pw->{config}{arraySize} = @{ $pw->{theArray} };
 $pw->{config}{maxSnippetSize} = 100;
 
 $pw->runSlot( $_ ) for 0..9;

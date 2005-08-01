@@ -24,9 +24,9 @@ chomp( $input = <> );
 
 $conf{title} = $input || $game_name;
 
-print "Arrayna size [100]: ";
+print "Size of the Array [100]: ";
 chomp( $input = <> );
-$conf{arraynaSize} = $input || 100;
+$conf{theArraySize} = $input || 100;
 
 print "game length (0 = open-ended game) [100]: ";
 chomp( $input = <> );
@@ -62,9 +62,9 @@ print "creating round 0.. \n";
 
 my $fh;
 open $fh, ">$game_dir/round_current.xml" or die "can't create file $game_dir/round_current.xml: $!\n";
-print $fh "<round id='0'><arrayna>\n";
-print $fh "<slot id='$_'><owner></owner><code></code></slot>\n" for 0..$conf{arraynaSize}-1;
-print $fh "</arrayna><log/></round>";
+print $fh "<round id='0'><theArray>\n";
+print $fh "<slot id='$_'><owner></owner><code></code></slot>\n" for 0..$conf{theArraySize}-1;
+print $fh "</theArray><log/></round>";
 close $fh;
 
 print "\ngame $game_name created\n";
