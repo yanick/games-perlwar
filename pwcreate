@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+# TODO: add color entry for players and default colors
+
 use strict;
 use warnings;
 
@@ -22,7 +24,7 @@ my $input;
 print "game title [$game_name]: ";
 chomp( $input = <> );
 
-$conf{title} = $input || $game_name;
+$conf{title}{content} = $input || $game_name;
 
 print "Size of the Array [100]: ";
 chomp( $input = <> );
@@ -32,13 +34,15 @@ print "game length (0 = open-ended game) [100]: ";
 chomp( $input = <> );
 $conf{gameLength} = length($input) ? $input : 100;
 
+$conf{currentIteration} = 0;
+
 print "snippet max. length [100]: ";
 chomp( $input = <> );
-$conf{snippetMaxLength} = $input || 100;
+$conf{snippetMaxLength}{content} = $input || 100;
 
 print "mambo game (0=no, any positive integer is taken as the decrement)[0]: ";
 chomp( $input = <> );
-$conf{mamboDecrement} = $input;
+$conf{mamboDecrement}{content} = $input;
 
 my @players;
 $conf{player} = \@players;
@@ -52,9 +56,9 @@ while(1)
 }
 
 print "notes (empty line to terminate):\n";
-$conf{note}{text} .= $_ while ($_ = <>) ne "\n";
+$conf{note}{content} .= $_ while ($_ = <>) ne "\n";
 
-print "saving configuration.. ";
+print "saving configuration..\n";
 
 XMLout( \%conf, OutputFile => "$game_dir/configuration.xml", RootName => 'configuration' );
 
