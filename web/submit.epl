@@ -1,0 +1,13 @@
+<html>
+<head><TITLE></TITLE></head>
+<body>
+<FORM action="upload_agent.epl">
+<table>
+<TR><TD>player:</TD><TD><INPUT type="text" name="player"> <br/></TD></TR>
+<TR><TD>password:</TD><TD><INPUT type="password" name="password"></TD></TR>
+<TR><TD>agent:</TD><TD><textarea name="agent"></textarea></TD></TR>
+<TR><TD></TD><TD><INPUT type="submit" value="upload"></TD></TR>
+</table>
+</FORM>
+</body>
+</html>
