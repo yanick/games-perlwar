@@ -7,6 +7,9 @@ use warnings;
 
 use XML::Simple;
 
+# TODO: add more of those
+my @colors = ( 'pink', 'lightblue', 'yellow' );
+
 my $game_name = "game";
 my $game_dir = "./$game_name";
 
@@ -49,10 +52,11 @@ $conf{player} = \@players;
 
 while(1)
 {
-	print "enter a player/password pair, or nothing if done: ";
-	my( $name, $password ) = split ' ', <> or last;
+	print "enter a player (name password [color]), or nothing if done: ";
+	my( $name, $password, $color ) = split ' ', <> or last;
+	$color ||= shift @colors;
 		
-	push @players, { name => $name, password => $password };
+	push @players, { name => $name, password => $password, color => $color };
 }
 
 print "notes (empty line to terminate):\n";
