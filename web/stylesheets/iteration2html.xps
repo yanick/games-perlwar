@@ -51,6 +51,8 @@ function resetConsole()
 
 <style>
 
+entry { display: block }
+
 .score {
     left : 95px;
     position : absolute;
@@ -222,7 +224,7 @@ for( 0..findvalue( '/perlwar/configuration/@theArraySize' ) -1 ) { %>
 <div style="clear: both;height:10px"></div>
 <INPUT type="submit" value="show log" onclick="showLog()">
 <div class="console">
-<div name='log' class='log'><%= findvalue( '/perlwar/round/log/text()' ) %></div>
+<div name='log' class='log'><%= apply_templates( '/perlwar/round/log' ) %></div>
 <% for( 0..findvalue( '/perlwar/configuration/@theArraySize' ) -1 ) { %>
 	<div name="slotCode" class="slotCode" id='<%= $_ %>'><%= findvalue( "/perlwar/round/theArray/slot[\@id = $_]/code/text()" ) %></div>	
 <% } %>

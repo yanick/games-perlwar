@@ -2,6 +2,7 @@ package Games::PerlWar;
 
 use strict;
 use warnings;
+use utf8;
 
 use Safe;
 
@@ -35,7 +36,7 @@ sub load
 
 	my $xml = XML::LibXML->new->parse_file( 'round_current.xml' );
 
-	$self->{round} = $xml->findvalue( '/round/@id' );
+	$self->{round} = $xml->findvalue( '/round/@number' );
 	print "this is round $self->{round}\n";
 	my @theArray;
 	$self->{theArray} = \@theArray;
@@ -43,6 +44,7 @@ sub load
 	{
 		my $owner = $xml->findvalue( "//slot[\@id=$slot]/owner/text()" );
 		my $code = $xml->findvalue( "//slot[\@id=$slot]/code/text()" );
+
 		print "$slot : $owner : $code\n";
 		if( $code )
 		{
@@ -145,7 +147,7 @@ sub introduce_newcomers
 
 	WARRIOR: for my $player ( @files )
 	{
-		my $date = localtime( -M $player );
+		my $date = localtime( $^T - (-M $player)/24*60*60 );
 		$self->log( "$player sends a new code warrior in the theArray ($date)" );
 		
 		my $fh;
@@ -220,6 +222,7 @@ sub runSlot
   local @_;
   @_ = map $_->{code}, @{$self->{theArray}}[ $slotId..(@{$self->{theArray}}-1), 0..($slotId-1) ];
   local $_;
+  utf8::decode( $slot{code} );
   $_ = $slot{code};
  
   # exceed permited size?
@@ -230,25 +233,31 @@ sub runSlot
     return;
   }
 
-  $self->log( "executing..." );
+  $self->log( "executing :$_:" );
 
   # run this in a safe
   my $safe = new Safe;
   my $result;
   my $error;
+  my $x = $slot{code};
+  print $x;
 
   eval {
     local $SIG{ALRM} = sub { die "timed out\n" };
     alarm 1;
-    $result = $safe->reval( $slot{code} );
+	undef $@;
+    $result = $safe->reval( $x );
     $error = $@;   
     alarm 0;
   };
 
+  $self->{theArray}[$slotId]{code} = $_;
+
   if( $error ) {
     $self->log( "snippet crashed: $error" );
-    $self->{theArray}[$slotId] = {};
-  } else {
+    #$self->{theArray}[$slotId] = {};
+  }
+  #} else {
     $self->log( "result: $result" );
     if( $result =~ /^!(-?\d*)$/ )   # !613
     {
@@ -306,7 +315,7 @@ sub runSlot
       $self->{theArray}[$dest_pos]{freshly_copied} = 1 ;
     }
 
-  }
+  #}
 }
 
 sub relative_to_absolute_position
