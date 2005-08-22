@@ -11,6 +11,6 @@ use warnings;
 
 require 'PerlWar.pm';
 
-my $pw = new Games::PerlWar( 'game' );
+my $pw = new Games::PerlWar( shift );
 
 $pw->play_round;

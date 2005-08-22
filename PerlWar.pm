@@ -70,6 +70,7 @@ sub play_round
 
 	# check if the game is over (because round > game length)
 	$self->{round}++;
+	$self->{conf}{currentIteration} = $self->{round};
 	if( $self->{round} > $self->{conf}{gameLength} )
 	{
 		print "number of rounds limit reached, game is over\n";
@@ -133,6 +134,12 @@ sub save
 	$writer->end();
 
 	$output->close();
+
+	open my $current_file, "round_current.xml" or die;
+	open my $archive, sprintf( ">history/round_%05d.xml", $self->{round} ) or die "$!";
+	print $archive $_ while <$current_file>;
+	close $current_file;
+	close $archive;
 }
 
 sub introduce_newcomers
