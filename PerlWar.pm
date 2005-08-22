@@ -196,10 +196,12 @@ sub introduce_newcomers
 	chdir '..';
 }
 
-sub log {
+sub log 
+{
   my $self = shift;
 
-  if( $self->{interactive} ) {
+  if( $self->{interactive} ) 
+  {
     local $\ = "\n";
     print for @_;
   }

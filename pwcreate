@@ -10,7 +10,7 @@ use XML::Simple;
 # TODO: add more of those
 my @colors = ( 'pink', 'lightblue', 'yellow' );
 
-my $game_name = "game";
+my $game_name = shift || "game";
 my $game_dir = "./$game_name";
 
 print "creating game directories $game_dir.. ";
