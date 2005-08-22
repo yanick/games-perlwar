@@ -48,8 +48,14 @@ function resetConsole()
 }
 </script>
 
-
 <style>
+
+BODY { background-color: black; color: lightgreen; font-family: sans-serif;}
+
+A:link { text-decoration: overline; color: #00A713  }
+A:visited { text-decoration: overline; color: #00A713  }
+A:active { text-decoration: overline; color: maroon }
+
 
 entry { display: block }
 
@@ -63,7 +69,7 @@ entry { display: block }
     overflow : scroll;
     visibility : hidden;
     white-space : pre;
-    height : 100px;
+    height : 300px;
   }
 
 
@@ -89,6 +95,7 @@ entry { display: block }
     z-index : 0;
     border : yellow ridge;
     border-width: 0px;
+    color: black;
   }
 
 
@@ -107,10 +114,13 @@ entry { display: block }
   }
 
 
-.summary {
+.summary, .gameLinks {
     border : solid 1;
     width: 200px;
-    top: 100px;
+    top: 100px;	
+    background-color: #616460;
+	margin: 5px;
+	padding: 5px;
   }
 
 
@@ -122,7 +132,7 @@ entry { display: block }
 .leftSide {
     position: absolute;
     top: 100px;
-    left: 220px;
+    left: 230px;
     width: 600px;
     border: dotted 1;
   }
@@ -133,11 +143,12 @@ entry { display: block }
 
 
 .console {
-    background : black;
+    background-color : #616460;
     border-style : dotted;
     clear : both;
     color : #90ee90;
-    height : 100px;
+    height : 300px;
+    margin-top: 15px;
   }
 
 </style>
@@ -184,24 +195,28 @@ entry { display: block }
 
 </div>
 
-<div>
-<a>game settings</a><br/>
-<a>iteration log</a>
-<a>submit agent</a><br/>
-<br/>
+<div class="gameLinks">
+<a href="configuration.xml">war configuration</a>
+<br/><br/>
+
+<a href="">u/l agent</a>
+<br/><br/>
 
 <form>
-history<br/>
-<a>iteration 
-<SELECT name="history">
+<b>log</b><br/>
+<div style="margin-left: 10px">
+iteration <SELECT name="history">
 <% for( 1..findvalue( '/perlwar/configuration/@currentIteration' ) ) { %>
-	<option><%= $_ %></option> <% } %>
-</SELECT></a>  <INPUT type="submit" value="access">
-
+	<option><%= $_ %></option> 
+<% } %>
+</SELECT>&nbsp;
+<INPUT type="submit" value="access">
+</div>
 </form>
 <br/>
 <br/>
-<a>what is perlwar?</a>
+<a href="whatisperlwar.html">what is perlwar?</a>
+
 
 </div>
 
