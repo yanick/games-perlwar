@@ -160,7 +160,7 @@ entry { display: block }
 <div class="rightSide">
 
 <div class="summary">
-<div align="center">iteration <%= findvalue( '/perlwar/round/@id' )  %></a></div>
+<div align="center">iteration <%= findvalue( '/perlwar/round/@number' )  %></a></div>
 <br/>
 <%
 	my %players;
@@ -182,6 +182,21 @@ entry { display: block }
 %>
 
 <!-- TODO: add submission time information -->
+<%
+	
+	my %subm;
+	for( grep $_, keys %players )
+	{
+		my $t = -M "atrium/$_" or next;
+		$subm{ $_ } = $^T - $t*24*60*60;	
+	}
+	my @order = sort { $subm{$a} <=> $subm{$b} } keys %subm;
+	for( 1..@order )
+	{
+		my $x = $order[$_-1];
+		$subm{$x} = "<sub><a title='".localtime($subm{$x})."'>$_</a></sub>";
+	}
+%>
 <% for( sort { $players{$b}{score} <=> $players{$a}{score} } keys %players ) { 
 	next unless $_;  %> <!--  remove the blank player    -->
 	<div style="color: <%= $players{$_}{color} %>"
@@ -189,7 +204,7 @@ entry { display: block }
 			class="deadPlayer" 
 		<% } %> 
 	>
-	<%= $_ %> <span class="score"><%= $players{$_}{score} %></span>
+	<%= $_ %> <%= $subm{$_} %> <span class="score"><%= $players{$_}{score} %></span>
 	</div>
 <% } %>
 
@@ -199,14 +214,14 @@ entry { display: block }
 <a href="configuration.xml">war configuration</a>
 <br/><br/>
 
-<a href="">u/l agent</a>
+<a href="upload.html">u/l agent</a>
 <br/><br/>
 
 <form>
 <b>log</b><br/>
 <div style="margin-left: 10px">
 iteration <SELECT name="history">
-<% for( 1..findvalue( '/perlwar/configuration/@currentIteration' ) ) { %>
+<% for( 0..findvalue( '/perlwar/configuration/@currentIteration' ) ) { %>
 	<option><%= $_ %></option> 
 <% } %>
 </SELECT>&nbsp;
