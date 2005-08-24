@@ -1,5 +1,5 @@
 AxNoCache On
 <AxStyleName "#default">
-   AxAddProcessor application/x-ypathscript stylesheets/include_config.xps
-   AxAddProcessor application/x-ypathscript stylesheets/iteration2html.xps
+   AxAddProcessor application/x-ypathscript /home/web/html/pwtest/trunk/web/stylesheets/include_config.xps
+   AxAddProcessor application/x-ypathscript /home/web/html/pwtest/trunk/web/stylesheets/iteration2html.xps
 </AxStyleName>

@@ -136,7 +136,7 @@ sub save
 	$output->close();
 
 	open my $current_file, "round_current.xml" or die;
-	open my $archive, sprintf( ">history/round_%05d.xml", $self->{round} ) or die "$!";
+	open my $archive, sprintf( ">round_%05d.xml", $self->{round} ) or die "$!";
 	print $archive $_ while <$current_file>;
 	close $current_file;
 	close $archive;
