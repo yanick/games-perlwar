@@ -78,11 +78,14 @@ sub play_round
 	}
 
 	$self->{log} = [];
+	$self->log( localtime() . " : running round ".$self->{round} );
 	
 	# import newcomers
+	$self->log( "train arriving from Station Mobil.." );
 	$self->introduce_newcomers;
 	
 	# run each slot
+	$self->log( "running the Array.." );
 	for( 0..$self->{conf}{theArraySize}-1 )
 	{
 		$self->runSlot( $_ );
@@ -155,7 +158,7 @@ sub introduce_newcomers
 	WARRIOR: for my $player ( @files )
 	{
 		my $date = localtime( $^T - (-M $player)/24*60*60 );
-		$self->log( "$player sends a new code warrior in the theArray ($date)" );
+		$self->log( "\t".$player."'s new agent is aboard (u/l'ed $date)" );
 		
 		my $fh;
 		my $code;
@@ -172,12 +175,12 @@ sub introduce_newcomers
 		{
 			push @available_slots, $_ unless $self->{theArray}[$_];
 		}
-		$self->log( "there are ".scalar(@available_slots)." slots available" );
+		# $self->log( "there are ".scalar(@available_slots)." slots available" );
 		
 		if( @available_slots > 0 )
 		{
 			my $slot = $available_slots[ rand @available_slots ];
-			$self->log( "code warrior enters theArray at slot $slot" );
+			$self->log( "\tagent inserted at cell $slot" );
 			$self->{theArray}[$slot] = { owner => $player, code => $code };
 			unlink $player or die;
 			next WARRIOR;
@@ -226,7 +229,7 @@ sub runSlot
 
 	return if $slot{freshly_copied} or not $slot{code};
 
-	$self->log( "slot $slotId: owned by $slot{owner}" ); 
+	$self->log( "cell $slotId: agent owned by $slot{owner}" ); 
 
   local @_;
   @_ = map $_->{code}, @{$self->{theArray}}[ $slotId..(@{$self->{theArray}}-1), 0..($slotId-1) ];
@@ -237,12 +240,12 @@ sub runSlot
   # exceed permited size?
   if( length > $self->{conf}{snippetMaxLength} )
   {
-    $self->log( "snippet crashed: is ".length($_)." chars, exceeds max permitted size $self->{conf}{snippetMaxSize}" ); 
+    $self->log( "\tagent crashed: is ".length($_)." chars, exceeds max permitted size $self->{conf}{snippetMaxSize}" ); 
     $self->{theArray}[ $slotId ] = {};
     return;
   }
 
-  $self->log( "executing :$_:" );
+  $self->log( "\texecuting.." );
 
   # run this in a safe
   my $safe = new Safe;
@@ -263,32 +266,42 @@ sub runSlot
   $self->{theArray}[$slotId]{code} = $_;
 
   if( $error ) {
-    $self->log( "snippet crashed: $error" );
-    #$self->{theArray}[$slotId] = {};
-  }
-  #} else {
-    $self->log( "result: $result" );
+    $self->log( "\tagent crashed: $error" );
+    $self->{theArray}[$slotId] = {};
+    return;
+  } 
+  
+  
+    $self->log( "\tagent returned: $result" );
     if( $result =~ /^!(-?\d*)$/ )   # !613
     {
-      my $pos = $1 || 0;
+		my $pos = $1 || 0;
       if( abs $pos > $#_ ) {
-        $self->log( "position out-of-bound" );
+        $self->log( "\tposition out-of-bound" );
       }
       else {
         $pos += $slotId;
         $pos %= @_ if $pos >= @_;
         $pos += @_ if $pos < 0;
-        $self->log( "Cell $pos of the Array nuked" );
-        $self->{theArray}[ $pos ] = { };
+        if( $self->{theArray}[ $pos ] )
+        {
+        	$self->log( "agent in cell $pos destroyed" );
+        	$self->{theArray}[ $pos ] = { };
+        }
+        else
+        {
+        	$self->log( "cell $pos is empty" );
+        }
       }
     }
     elsif( $result =~ /^\^(-?\d*)$/ )  # ^613
     {
+
       my $pos = $self->relative_to_absolute_position( $slotId, $1 );
 
       return if $pos == -1;
 
-      $self->log( "Cell $pos of the Array p0wned" );
+      $self->log( "\tagent in cell $pos p0wned" );
       $self->{theArray}[$pos]{owner} = $self->{theArray}[$slotId]{owner};
     }
     elsif( $result =~ /^~(-?\d*)$/ )  # ~613
@@ -298,7 +311,7 @@ sub runSlot
       return if $pos == -1;
 
       $self->{theArray}[$pos]{code} = $_[$relative];
-      $self->log( "Code of cell $pos updated" );
+      $self->log( "\tcode of agent in cell $pos altered" );
       
     }
     elsif( $result =~ /^(-?\d*):(-?\d*)$/ )  # 212:213
@@ -315,16 +328,18 @@ sub runSlot
       if( $self->{theArray}[$dest_pos]{owner} and
           $self->{theArray}[$dest_pos]{owner} ne $self->{theArray}[$slotId]{owner} ) 
       {
-        $self->log( "cell $dest_pos already owned by $self->{theArray}[$dest_pos]{owner}" );
+        $self->log( "\tagent in cell $dest_pos already owned by $self->{theArray}[$dest_pos]{owner}" );
         return;
       }
 
-      $self->log( "Snippet in cell $src_pos copied into cell $dest_pos" );
+      $self->log( "\tagent of cell $src_pos copied into cell $dest_pos" );
       $self->{theArray}[$dest_pos] = \%{$self->{theArray}[$src_pos]};
       $self->{theArray}[$dest_pos]{freshly_copied} = 1 ;
     }
-
-  #}
+    else
+    {
+    	$self->log( "\tno-op" );
+    }
 }
 
 sub relative_to_absolute_position
@@ -333,7 +348,7 @@ sub relative_to_absolute_position
   $shift ||= 0;
 
   if( abs( $shift ) > $self->{conf}{theArraySize} ) {
-    $self->log( "position $shift out-of-bound" );
+    $self->log( "\tposition $shift out-of-bound" );
     return -1;
   }
   $slotId += $shift + 2 * $self->{conf}{theArraySize};

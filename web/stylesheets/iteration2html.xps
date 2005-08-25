@@ -46,6 +46,11 @@ function resetConsole()
 	document.getElementsByName( "log" )[0].style['visibility'] = 'hidden';
 
 }
+
+function resolve_iteration ()
+{
+	document.forms[0].action = document.forms[0].elements[0].options[ document.forms[0].elements[0].selectedIndex ].value;	
+}
 </script>
 
 <style>
@@ -204,7 +209,7 @@ entry { display: block }
 			class="deadPlayer" 
 		<% } %> 
 	>
-	<%= $_ %> <%= $subm{$_} %> <span class="score"><%= $players{$_}{score} %></span>
+	<%= $_ %> <%= $subm{$_} %> <span class="score"><%= $players{$_}{score} || "0" %></span>
 	</div>
 <% } %>
 
@@ -217,15 +222,16 @@ entry { display: block }
 <a href="upload.html">u/l agent</a>
 <br/><br/>
 
-<form>
+<form name='history_form' onSubmit="resolve_iteration();return true;">
 <b>log</b><br/>
 <div style="margin-left: 10px">
-iteration <SELECT name="history">
-<% for( 0..findvalue( '/perlwar/configuration/@currentIteration' ) ) { %>
-	<option><%= $_ %></option> 
+
+iteration <SELECT name="history_select">
+<% for( reverse 0..findvalue( '/perlwar/configuration/@currentIteration' ) ) { %>
+	<option value='<%= sprintf 'round_%05d.xml', $_ %>'><%= $_ %></option> 
 <% } %>
 </SELECT>&nbsp;
-<INPUT type="submit" value="access">
+<INPUT type="submit" value="access" >
 </div>
 </form>
 <br/>
