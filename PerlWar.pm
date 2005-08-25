@@ -23,7 +23,14 @@ sub new
 {
     my( $class, $dir ) = @_;
     my $self = { dir => $dir, interactive => 1 };
+    chdir $self->{dir};
     bless $self, $class;
+}
+
+sub clear_log
+{
+	my $self = shift;
+	$self->{log} = ();
 }
 
 sub load 
@@ -57,8 +64,6 @@ sub play_round
 {
 	my $self = shift;
 	
-	chdir $self->{dir};
-
 	$self->load;
 
 	# check if the game is over (because a player won)
@@ -209,6 +214,8 @@ sub introduce_newcomers
 sub log 
 {
   my $self = shift;
+  
+  return @{$self->{log}} unless @_;
 
   if( $self->{interactive} ) 
   {
@@ -217,6 +224,17 @@ sub log
   }
 
   push @{$self->{log}}, @_;
+}
+
+sub insert_agent
+{
+	my ( $self, $pos, $player, $code ) = @_;
+	
+	$self->log( "can't insert agent: cell $pos out of bound" )
+		if $pos >= $self->{conf}{theArraySize};
+		
+	$self->{theArray}[$pos] = { owner => $player, code => $code };
+	
 }
 
 sub runSlot 

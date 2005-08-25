@@ -70,12 +70,15 @@ XMLout( \%conf, OutputFile => "$game_dir/configuration.xml", RootName => 'config
 
 print "creating round 0.. \n";
 
-my $fh;
-open $fh, ">$game_dir/round_current.xml" or die "can't create file $game_dir/round_current.xml: $!\n";
-print $fh "<round id='0'><theArray>\n";
-print $fh "<slot id='$_'><owner></owner><code></code></slot>\n" for 0..$conf{theArraySize}-1;
-print $fh "</theArray><log/></round>";
-close $fh;
+for my $filename ( qw/ round_current.xml round_00000.xml / )
+{
+	my $fh;
+	open $fh, ">$game_dir/$filename" or die "can't create file $game_dir/$filename: $!\n";
+	print $fh "<round id='0'><theArray>\n";
+	print $fh "<slot id='$_'><owner></owner><code></code></slot>\n" for 0..$conf{theArraySize}-1;
+	print $fh "</theArray><log/></round>";
+	close $fh;
+}
 
 print "\ngame $game_name created\n";
 

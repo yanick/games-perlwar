@@ -1,0 +1,9 @@
+<configuration currentIteration="13" gameLength="97" theArraySize="99">
+  <mamboDecrement>0</mamboDecrement>
+  <note>test
+</note>
+  <player name="yanick" color="pink" password="y" />
+  <player name="anja" color="lightblue" password="a" />
+  <snippetMaxLength>67</snippetMaxLength>
+  <title>test</title>
+</configuration>
