@@ -55,6 +55,7 @@ sub load
 		print "$slot : $owner : $code\n";
 		if( $code )
 		{
+			utf8::decode( $code );
 			$theArray[ $slot ] = { owner => $owner, code => $code };
 		}
 	}
@@ -237,6 +238,40 @@ sub insert_agent
 	
 }
 
+# ( $result, $error, @array ) = $pw->execute( @array )
+# executes the code of $array[0]
+sub execute
+{
+	my $self = shift;
+	local @_ = @_;
+	local $_ = $_[0];
+	   
+	# run this in a safe
+	my $safe = new Safe 'Container';
+	$safe->permit( qw/ time sort :browse :default / );
+	my $result;
+	my $error;
+  
+	eval 
+	{
+    	local $SIG{ALRM} = sub { die "timed out\n" };
+    	alarm 1;
+		undef $@;
+		my $code = $_[0];
+		@Container::Array = @_;
+		$Container::S = $self->{conf}{snippetMaxLength};
+		$Container::I = $self->{conf}{gameLength};
+		$Container::i = $self->{conf}{currentIteration};
+		$safe->share( '$S', '$I', '$i', '@_' );
+    	$result = $safe->reval( '@_ = @Array;'.$code );
+    	$code = $_[0];
+    	$error = $@;   
+    	alarm 0;
+  	};
+
+	return ( $result, $error, @_ );
+}
+
 sub runSlot 
 {
   	my ( $self, $slotId ) = @_;
@@ -249,46 +284,28 @@ sub runSlot
 
 	$self->log( "cell $slotId: agent owned by $slot{owner}" ); 
 
-  local @_;
-  @_ = map $_->{code}, @{$self->{theArray}}[ $slotId..(@{$self->{theArray}}-1), 0..($slotId-1) ];
-  local $_;
-  utf8::decode( $slot{code} );
-  $_ = $slot{code};
+	my @Array = map $_->{code}, @{$self->{theArray}}[ $slotId..(@{$self->{theArray}}-1), 0..($slotId-1) ];
  
-  # exceed permited size?
-  if( length > $self->{conf}{snippetMaxLength} )
-  {
-    $self->log( "\tagent crashed: is ".length($_)." chars, exceeds max permitted size $self->{conf}{snippetMaxSize}" ); 
-    $self->{theArray}[ $slotId ] = {};
-    return;
-  }
+	# exceed permited size?
+  	if( length > $self->{conf}{snippetMaxLength} )
+  	{
+    	$self->log( "\tagent crashed: is ".length($Array[0])." chars, exceeds max permitted size $self->{conf}{snippetMaxSize}" ); 
+    	$self->{theArray}[ $slotId ] = {};
+    	return;
+  	}
 
-  $self->log( "\texecuting.." );
+  	$self->log( "\texecuting.." );
+  	
+  	my( $result, $error );
+  	( $result, $error, @Array ) = $self->execute( @Array );
 
-  # run this in a safe
-  my $safe = new Safe;
-  my $result;
-  my $error;
-  my $x = $slot{code};
-  print $x;
+	$self->{theArray}[$slotId]{code} = $Array[0];
 
-  eval {
-    local $SIG{ALRM} = sub { die "timed out\n" };
-    alarm 1;
-	undef $@;
-    $result = $safe->reval( $x );
-    $error = $@;   
-    alarm 0;
-  };
-
-  $self->{theArray}[$slotId]{code} = $_;
-
-  if( $error ) {
-    $self->log( "\tagent crashed: $error" );
-    $self->{theArray}[$slotId] = {};
-    return;
-  } 
-  
+	if( $error ) {
+    	$self->log( "\tagent crashed: $error" );
+    	$self->{theArray}[$slotId] = {};
+    	return;
+  	} 
   
     $self->log( "\tagent returned: $result" );
     if( $result =~ /^!(-?\d*)$/ )   # !613
@@ -328,7 +345,7 @@ sub runSlot
       my $pos = $self->relative_to_absolute_position( $slotId, $1 );
       return if $pos == -1;
 
-      $self->{theArray}[$pos]{code} = $_[$relative];
+      $self->{theArray}[$pos]{code} = $Array[$relative];
       $self->log( "\tcode of agent in cell $pos altered" );
       
     }

@@ -58,8 +58,8 @@ the code of the snippet.
 =item @_
 the whole Array, positioned relatively to the current snippet. (i.e., $_[0] == $_ )
 
-=item $W, $R, $r
-the game's parameters $W (max snippet's length) and $R (max # of rounds), plus the current round $r.
+=item $S, $I, $i
+the game's parameters $S (max agent's size) and $I (max # of iterations), plus the current iteration $i.
 
 =back
 
