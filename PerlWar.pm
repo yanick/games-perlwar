@@ -96,6 +96,16 @@ sub play_round
 	{
 		$self->runSlot( $_ );
 	}
+
+	# sanity check, make sure cells without agents are without owner
+	for( 0..$self->{conf}{theArraySize}-1 )
+	{
+		if( $self->{theArray}[ $_ ]{owner} and not $self->{theArray}[ $_ ]{code} ) 
+		{
+			$self->log( "warning: cell at position is empty and yet owned. Correcting the Array.." );
+			$self->{theArray}[ $_ ] = undef;
+		}
+	}
 	
 	# check for victory
 	
@@ -306,8 +316,11 @@ sub runSlot
     	$self->{theArray}[$slotId] = {};
     	return;
   	} 
+
+	my $pretty_result = substr $result, 0, 10;  # for output
+	$pretty_result =~ s#\n#\\n#g;
   
-    $self->log( "\tagent returned: $result" );
+    $self->log( "\tagent returned: $pretty_result" );
     if( $result =~ /^!(-?\d*)$/ )   # !613
     {
 		my $pos = $1 || 0;
@@ -329,12 +342,18 @@ sub runSlot
         }
       }
     }
-    elsif( $result =~ /^\^(-?\d*)$/ )  # ^613
+    elsif( $result =~ /^\^(-?\d*)$/ )  # ^613  - p0wning
     {
 
       my $pos = $self->relative_to_absolute_position( $slotId, $1 );
 
       return if $pos == -1;
+
+	  unless( $self->{theArray}[$pos] and $self->{theArray}[$pos]{code} )
+	  {
+	  	$self->log( "\tno agent to p0wn in cell $pos" );
+		return;
+	  }
 
       $self->log( "\tagent in cell $pos p0wned" );
       $self->{theArray}[$pos]{owner} = $self->{theArray}[$slotId]{owner};
