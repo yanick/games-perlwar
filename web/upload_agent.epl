@@ -13,13 +13,13 @@
 [-
 my $existed;
 
-$existed = 1 if -e "atrium/$fdat{player}";
+$existed = 1 if -e "mobil/$fdat{player}";
 
-open my $fagent, ">atrium/$fdat{player}\n";
+open my $fagent, ">mobil/$fdat{player}\n";
 print $fagent $fdat{agent};
 close $fagent;
 -]
-[$ if -e "atrium/$fdat{player}" $]
+[$ if -e "mobil/$fdat{player}" $]
 <p>agent uploaded</p>
 [$ if $existed $]
 <p>An agent was already present and has been... removed.</p>

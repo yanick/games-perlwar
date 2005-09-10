@@ -165,7 +165,7 @@ entry { display: block }
 <div class="rightSide">
 
 <div class="summary">
-<div align="center">iteration <%= findvalue( '/perlwar/round/@number' )  %></a></div>
+<div align="center">iteration <%= findvalue( '/perlwar/round/@number' ) || '0'  %></a></div>
 <br/>
 <%
 	my %players;
