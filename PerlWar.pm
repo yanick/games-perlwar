@@ -52,7 +52,7 @@ sub load
 		my $owner = $xml->findvalue( "//slot[\@id=$slot]/owner/text()" );
 		my $code = $xml->findvalue( "//slot[\@id=$slot]/code/text()" );
 
-		print "$slot : $owner : $code\n";
+		#print "$slot : $owner : $code\n";
 		if( $code )
 		{
 			utf8::decode( $code );
@@ -65,7 +65,7 @@ sub play_round
 {
 	my $self = shift;
 	
-	$self->load;
+	# $self->load;
 
 	# check if the game is over (because a player won)
 	if( $self->{conf}{gameStatus} eq 'over' )
@@ -90,6 +90,9 @@ sub play_round
 	$self->log( "train arriving from Station Mobil.." );
 	$self->introduce_newcomers;
 	
+	# check if players are eliminated
+	$self->checkForEliminatedPlayers;
+	
 	# run each slot
 	$self->log( "running the Array.." );
 	for( 0..$self->{conf}{theArraySize}-1 )
@@ -112,7 +115,7 @@ sub play_round
 	# if victory, change the config
 	
 	# save the round
-	$self->save;
+	#$self->save;
 }
 
 sub save
@@ -161,6 +164,36 @@ sub save
 	close $archive;
 }
 
+##########################################################################
+
+sub checkForEliminatedPlayers
+{
+	my $self = shift;
+	
+	no warnings 'uninitialized';
+	
+	$self->log( "checking for eliminated players.." );
+	
+	my %score;
+	for my $pos ( 0..$self->{conf}{theArraySize} -1 ) 
+	{
+		$score{ $self->{theArray}[$pos]{owner} }++;
+	}
+	
+	for my $player ( keys %{ $self->{conf}{player} } )
+	{
+		next if $self->{conf}{player}{$player}{status} eq 'EOT';
+		unless( $score{ $player }  )
+		{
+			$self->log( "\tplayer $player lost all agents, eliminated" );
+			$self->{conf}{player}{$player}{status} = 'EOT';	
+		}
+	}
+	
+}
+
+##########################################################################
+
 sub introduce_newcomers
 {
 	my $self = shift;
@@ -176,6 +209,14 @@ sub introduce_newcomers
 		my $date = localtime( $^T - (-M $player)/24*60*60 );
 		$self->log( "\t".$player."'s new agent is aboard (u/l'ed $date)" );
 		
+		# dead players can't submit agents
+		if( $self->{conf}{player}{$player}{status} eq 'EOT' )
+		{
+			$self->log( "\tplayer is eliminated, can't submit a new agent" );
+			unlink $player or $self->log( "ERROR: $!" );
+			next WARRIOR;
+		}
+		
 		my $fh;
 		my $code;
 		{
@@ -185,20 +226,18 @@ sub introduce_newcomers
 			close $fh;
 		}
 		
-		
 		my @available_slots;
 		for( 0..$self->{conf}{theArraySize}-1 )
 		{
 			push @available_slots, $_ unless $self->{theArray}[$_];
 		}
-		# $self->log( "there are ".scalar(@available_slots)." slots available" );
 		
 		if( @available_slots > 0 )
 		{
 			my $slot = $available_slots[ rand @available_slots ];
 			$self->log( "\tagent inserted at cell $slot" );
 			$self->{theArray}[$slot] = { owner => $player, code => $code };
-			unlink $player or die;
+			unlink $player or $self->log( "ERROR: $!" );
 			next WARRIOR;
 		}
 		
@@ -210,17 +249,20 @@ sub introduce_newcomers
 		if( @available_slots > 0 )
 		{
 			my $slot = $available_slots[ rand @available_slots ];
-			$self->log( "code warrior bumps comrade and enters theArray at slot $slot" );
+			$self->log( "agent at cell $slot is upgraded" );
 			$self->{theArray}[$slot] = { owner => $player, code => $code };
-			unlink $player or die;
+			unlink $player or $self->log( "ERROR: $!" );
 			next WARRIOR;
 		}
 		
-		$self->log( "no empty slot left, code warrior left in the atrium" ); 
+		$self->log( "no empty slot left, agent deleted" ); 
+		unlink $player or $self->log( "ERROR: $!" );
 	}
 	
 	chdir '..';
 }
+
+##########################################################################
 
 sub log 
 {
@@ -237,6 +279,8 @@ sub log
   push @{$self->{log}}, @_;
 }
 
+##########################################################################
+
 sub insert_agent
 {
 	my ( $self, $pos, $player, $code ) = @_;
@@ -247,6 +291,8 @@ sub insert_agent
 	$self->{theArray}[$pos] = { owner => $player, code => $code };
 	
 }
+
+##########################################################################
 
 # ( $result, $error, @array ) = $pw->execute( @array )
 # executes the code of $array[0]
@@ -265,7 +311,7 @@ sub execute
 	eval 
 	{
     	local $SIG{ALRM} = sub { die "timed out\n" };
-    	alarm 1;
+    	alarm 3;
 		undef $@;
 		my $code = $_[0];
 		@Container::Array = @_;
@@ -273,14 +319,20 @@ sub execute
 		$Container::I = $self->{conf}{gameLength};
 		$Container::i = $self->{conf}{currentIteration};
 		$safe->share( '$S', '$I', '$i', '@_' );
-    	$result = $safe->reval( '@_ = @Array;'.$code );
+		$result = $safe->reval( <<EOT );
+local *_ = *Array;
+\$_ = \$_[0];
+$code
+EOT
     	$code = $_[0];
     	$error = $@;   
     	alarm 0;
   	};
 
-	return ( $result, $error, @_ );
+	return ( $result, $error, $error? undef : $safe->reval( '@Array' ) );
 }
+
+##########################################################################
 
 sub runSlot 
 {
@@ -309,6 +361,8 @@ sub runSlot
   	my( $result, $error );
   	( $result, $error, @Array ) = $self->execute( @Array );
 
+	warn "POST-EXEC: $Array[0]";
+
 	$self->{theArray}[$slotId]{code} = $Array[0];
 
 	if( $error ) {
@@ -317,30 +371,26 @@ sub runSlot
     	return;
   	} 
 
-	my $pretty_result = substr $result, 0, 10;  # for output
-	$pretty_result =~ s#\n#\\n#g;
-  
-    $self->log( "\tagent returned: $pretty_result" );
-    if( $result =~ /^!(-?\d*)$/ )   # !613
+  	my $output = $result;
+  	$output = substr( $output, 0, 24 ).".." if length $output > 25;
+  	$output =~ s#\n#\\n#g;
+  	
+    $self->log( "\tagent returned: $output" );
+    
+    if( $result =~ /^!(-?\d*)$/ )   # !613 - nuke
     {
-		my $pos = $1 || 0;
-      if( abs $pos > $#_ ) {
-        $self->log( "\tposition out-of-bound" );
-      }
-      else {
-        $pos += $slotId;
-        $pos %= @_ if $pos >= @_;
-        $pos += @_ if $pos < 0;
+		my $pos = $self->relative_to_absolute_position( $slotId, $1 || 0 );
+		return if $pos == -1;
+		
         if( $self->{theArray}[ $pos ] )
         {
-        	$self->log( "agent in cell $pos destroyed" );
         	$self->{theArray}[ $pos ] = { };
+        	$self->log( "\tagent in cell $pos destroyed" );
         }
         else
         {
-        	$self->log( "cell $pos is empty" );
+        	$self->log( "\tno agent found at cell $pos" );
         }
-      }
     }
     elsif( $result =~ /^\^(-?\d*)$/ )  # ^613  - p0wning
     {
@@ -349,6 +399,7 @@ sub runSlot
 
       return if $pos == -1;
 
+	warn ">>>".$self->{theArray}[$pos].":".$self->{theArray}[$pos]{code};
 	  unless( $self->{theArray}[$pos] and $self->{theArray}[$pos]{code} )
 	  {
 	  	$self->log( "\tno agent to p0wn in cell $pos" );
@@ -363,8 +414,16 @@ sub runSlot
       my $relative = $1;
       my $pos = $self->relative_to_absolute_position( $slotId, $1 );
       return if $pos == -1;
+      
+	warn ">>>".join( ":", %{$self->{theArray}[$pos]});
+      unless( $self->{theArray}[$pos] and $self->{theArray}[$pos]{code} )
+      {
+      	$self->log( "\tno agent found at cell $pos" );
+      	return;
+      }
 
       $self->{theArray}[$pos]{code} = $Array[$relative];
+      warn join ":", @Array;
       $self->log( "\tcode of agent in cell $pos altered" );
       
     }
@@ -410,6 +469,20 @@ sub relative_to_absolute_position
 
   return $slotId;
 }
+
+sub readCell
+{
+	my( $self, $cellId ) = @_;
+	return undef unless $self->{theArray}[$cellId];
+	return ( $self->{theArray}[$cellId]{owner}, $self->{theArray}[$cellId]{code}  );
+}
+
+sub writeCell
+{
+	my( $self, $pos, $owner, $code ) = @_;
+	$self->{theArray}[$pos] = { owner => $owner, code => $code };
+}
+
 
 =pod
 

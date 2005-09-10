@@ -5,7 +5,7 @@ use Test;
 
 BEGIN
 {
-    plan tests => 11, todo => [];
+    plan tests => 16, todo => [];
 }
 
 use Games::PerlWar;
@@ -31,6 +31,10 @@ ok( $error ne "" );
 ( $result, $error, @Array ) = $pw->execute( 'system "ls"' );
 ok( $error ne "" );
 
+( $result, $error, @Array ) = $pw->execute( '1 while 1' );
+ok( $error ne "" );
+
+
 ( $result, $error, @Array ) = $pw->execute( 'scalar @_', ('a')x99 );
 ok( $result, 100 );
 
@@ -49,5 +53,25 @@ ok( $result, "next cell" );
 ( $result, $error, @Array ) = $pw->execute( '"$S:$I:$i"' );
 print "$error\n";
 ok( $result, '67:97:13' );
+
+# And now, operations
+
+# nuke function
+$pw->writeCell( 10, 'neo', '"!13"' );
+$pw->writeCell( 11, 'smith', '$_[-1] =~ s/!/#/g;"~-1"' );
+$pw->writeCell( 23, 'smith', '1' );
+$pw->writeCell( 24, 'smith', 'join ":", @_' );
+$pw->writeCell( 25, 'neo', '"^-1"' );
+
+$pw->play_round;
+
+warn join "\n", @{$pw->{log}};
+ok $pw->readCell(23), undef, "nuke function (!)";
+
+ok( ($pw->readCell(10))[0], 'neo', "alter function (~)" );
+ok( ($pw->readCell(10))[1], '"#13"', "alter function (~)" );
+ok( ($pw->readCell(24))[0], 'neo', 'p0wning function (^)' );
+
+
 
 

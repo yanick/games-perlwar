@@ -6,4 +6,5 @@
   <player name="anja" color="lightblue" password="a" />
   <snippetMaxLength>67</snippetMaxLength>
   <title>test</title>
+  <gameStatus>ongoing</gameStatus>
 </configuration>

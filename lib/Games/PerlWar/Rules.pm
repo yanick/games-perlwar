@@ -32,16 +32,23 @@ The maximal number of rounds that can be played before a game is declared over.
 
 A turn of the game is made up of the following steps:
 
-=head2 Introduction of New Snippets
+=head2 Introduction of New Agents
 
-Each player has the opportunity to submit a new snippet to be entered into the Array. 
-Insertions are treated in order of submission time. The cell into which an entrant snippet
+Each player has the opportunity to submit a new agent to be introduced to the Array. 
+Insertions are treated in order of submission time. The cell into which an entrant agent
 lands is picked randomly amongst the empty positions of the Array. 
 
 If there are no empty
-positions left, an entrant snippet replaces one of the already-present snippets owned
-by the player, chosen randomly. If the player does not own any snippet on the Array, 
-well, guess who the fat lady just sang for?
+positions left, an entrant agent replaces one of the already-present agents owned
+by the player, chosen randomly. If the player doesn't have any agents already
+present in the Array, the new agent is  discarded.
+
+
+=head2 Elimination of Players
+
+A player is eliminated from the game if he doesn't have any agents present in the 
+Array at the end of the introduction of new agents.
+
 
 =head2 Running the Array
 
@@ -116,13 +123,13 @@ E.g.:
 	return "~1";
 
 =item ^$x
-Claim ownership of the snippet in position $x of the Array. If there is no snippet at that 
+Claim ownership of the agent in position $x of the Array. If there is no agent at that 
 position, nothing happens.
 E.g.:
 
 	# crawling borg
 	$pos = 1; 
-	$s/\d+/$&+1/e; 
+	s/\d+/$&+1/e; 
 	return "^$pos";
 
 =back

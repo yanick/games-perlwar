@@ -24,6 +24,7 @@ mkdir "$game_dir/atrium" or die "couldn't create directory $game_dir/atrium:$!\n
 print "\n\ngame configuration\n";
 my %conf;
 
+$conf{gameStatus} = 'ongoing';
 
 my $input;
 print "game title [$game_name]: ";
