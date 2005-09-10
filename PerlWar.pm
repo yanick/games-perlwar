@@ -198,9 +198,9 @@ sub introduce_newcomers
 {
 	my $self = shift;
 	
-	chdir 'atrium';
+	chdir 'mobil';
 	my $dir;
-	opendir $dir, '.' or die "couldn't open dir atrium: $!\n";
+	opendir $dir, '.' or die "couldn't open dir mobil: $!\n";
 	my @files = sort { -M $a <=> -M $b } grep { exists $self->{conf}{player}{$_} } readdir $dir;
 	closedir $dir;
 

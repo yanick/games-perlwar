@@ -18,8 +18,8 @@ print "creating game directories $game_dir.. ";
 
 mkdir $game_dir or die "couldn't create directory $game_dir: $!\n";
 mkdir "$game_dir/history" or die "couldn't create directory $game_dir/history:$!\n";
-# TODO: change atrium to mobil_station
-mkdir "$game_dir/atrium" or die "couldn't create directory $game_dir/atrium:$!\n";
+# TODO: change mobil to mobil_station
+mkdir "$game_dir/mobil" or die "couldn't create directory $game_dir/atrium:$!\n";
 
 print "\n\ngame configuration\n";
 my %conf;
