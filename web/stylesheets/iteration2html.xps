@@ -192,7 +192,7 @@ entry { display: block }
 	my %subm;
 	for( grep $_, keys %players )
 	{
-		my $t = -M "atrium/$_" or next;
+		my $t = -M "mobil/$_" or next;
 		$subm{ $_ } = $^T - $t*24*60*60;	
 	}
 	my @order = sort { $subm{$a} <=> $subm{$b} } keys %subm;
