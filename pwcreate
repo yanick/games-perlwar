@@ -48,7 +48,9 @@ my $input;
 print "game title [$game_name]: ";
 chomp( $input = <> );
 
-$conf{title}{content} = $input || $game_name;
+$game_name = $input || $game_name;
+
+$conf{title}{content} = $game_name;
 
 print "Size of the Array [100]: ";
 chomp( $input = <> );
