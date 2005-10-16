@@ -10,10 +10,10 @@ Games::PerlWar - A Perl variant of the classic Corewar game
 	them can be bent, others can be broken.  - Morpheus
 
 PerlWar is inspired by the classic L<http://www.corewar.info/|Corewar> game.
-In this game, players pit snippets of Perl code against each other in order to
+In this game, players pit snippets of Perl code (called 'agents') against each other in order to
 gain control of the vicious virtual battlefield known as... the Array.
 
-=head1 GAME'S PARAMETERS
+=head1 GAME PARAMETERS
 
 =over 
 
@@ -21,7 +21,7 @@ gain control of the vicious virtual battlefield known as... the Array.
 Size of the Array
 
 =item *
-The maximal length, in characters, of a snippet. If a snippet is larger than this limit, it automatically segfaults upon execution.
+The maximal length, in characters, of an agent. If an agent is or becomes larger than this limit, it automatically segfaults upon execution.
 
 =item *
 The maximal number of rounds that can be played before a game is declared over.
@@ -34,7 +34,7 @@ A turn of the game is made up of the following steps:
 
 =head2 Introduction of New Agents
 
-Each player has the opportunity to submit a new agent to be introduced to the Array. 
+Each player has the opportunity to submit a new agent to be introduced into the Array. 
 Insertions are treated in order of submission time. The cell into which an entrant agent
 lands is picked randomly amongst the empty positions of the Array. 
 
@@ -52,29 +52,32 @@ Array at the end of the introduction of new agents.
 
 =head2 Running the Array
 
-Each cell of the Array is visited sequentially. If a cell contains a snippet, it is executed 
-(snippets exceeding the permitted length segfault on initialization). 
+Each cell of the Array is visited sequentially. If a cell contains an agent, it is executed 
+(agents exceeding the permitted length segfault on initialization). 
 
 =head3 Variables accessibles to the agents
 
 =over
 
 =item $_
-the code of the snippet.
+
+the code of the agent.
 
 =item @_
-the whole Array, positioned relatively to the current snippet. (i.e., $_[0] == $_ )
+
+the whole Array, positioned relatively to the current agent. (i.e., $_[0] == $_ )
 
 =item $S, $I, $i
+
 the game's parameters $S (max agent's size) and $I (max # of iterations), plus the current iteration $i.
 
 =back
 
 =head3 Outcomes
 
-If the snippet segfaults, it is erased and the cell ownership is cleared. 
+If the agent segfaults, it is erased and the cell ownership is cleared. 
 
-If a snippet executes without segfault'ing, the changes made to $_ (that is, on the snippet itself)
+If the agent executes without segfault'ing, the changes made to $_ (that is, on the snippet itself)
 are brought to the Array.
 E.g., the snippet 
 
@@ -84,20 +87,22 @@ once executed, will become
 
 	$turn = 14; s/\d+/$&+1/e;
 
-In addition, if the return value of the snippet matches a valid instruction (see below), it will
-be acted upon. If not, it is treated as a no-op.
+In addition, the agent can return an instruction (see below). If it returns
+a value that does not match any valid instruction, it is treated as a no-op.
 
 
-=head1 Snippet Return Instructions
+=head1 Agent Return Instructions
 
-A snippet can return one instruction of the following set:
+An agent can return one instruction of the set below. All positions are are 
+relative to the position of the executing agent.
 
 =over
 
 =item $x:$y
-Copy the code of cell $x of @_ (as defined after execution of the snippet) into position
-$y of the Array (relative to the position of the current snippet). $x and $y must be positive
-integers between 0 and $#_. If either $x or $y are not explicitly given, they default to 
+Copy the code of cell $x of @_ (as defined after execution of the agent) into position
+$y of the Array (relative to the position of the current agent). $x and $y must be 
+integers with an absolute value between 0 and $#_. 
+If either $x or $y are not explicitly given, they default to 
 the position 0. If the destination position is already occupied by a snippet belonging to
 a different player, the copy fails.
 E.g.:
@@ -106,7 +111,8 @@ E.g.:
 	return ":1"
 
 =item !$x
-Nuke the snippet presents in position $x of the Array (relative to the position of the current snippet), which
+
+Nuke the agent presents in position $x. The cell then 
 returns to its empty and unowned state. If $x is not given, defaults to 0.
 E.g.:
 
@@ -114,7 +120,8 @@ E.g.:
 	return '!'.1+int(rand(@_))
 
 =item ~$x
-Update the snippet in position $x of the Array by its counterpart in @_. If $x is not explicitly given,
+
+Update the agent in position $x of the Array by its counterpart in @_. If $x is not explicitly given,
 defaults to 0. Ownership of the modified snippet isn't modified.
 E.g.:
 
@@ -123,6 +130,7 @@ E.g.:
 	return "~1";
 
 =item ^$x
+
 Claim ownership of the agent in position $x of the Array. If there is no agent at that 
 position, nothing happens.
 E.g.:
@@ -138,8 +146,9 @@ E.g.:
 =head1 END OF GAME
 
 The game ends once the final round is played, or until all but one player have been eliminated. 
-The winner of the game is the player with the most snippets still alive
+The winner of the game is the player with the most agents still alive
 in the Array.
 
+=cut
 
-'end of Games::PerlWar::Rules';
+'end of Games::PerlWar::Rules'

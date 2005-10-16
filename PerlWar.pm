@@ -133,6 +133,20 @@ sub save
 	my $writer = new XML::Writer(OUTPUT => $output);
 
 	$writer->startTag( "round", number => $self->{round} );
+	
+	if( $self->{newcomers} )
+	{
+		$writer->startTag( 'newcomers' );
+		
+		for( @{$self->{newcomers}} )
+		{
+			my @x = @$_;
+			$writer->dataElement( 'newcomer', $x[2], player => $x[0], time => $x[1] );
+		}
+		$writer->endTag;
+	}
+	
+	
 	if( $self->{log} )
 	{
   		$writer->startTag( 'log' );
@@ -196,6 +210,7 @@ sub checkForEliminatedPlayers
 
 sub introduce_newcomers
 {
+	no warnings 'uninitialized';
 	my $self = shift;
 	
 	chdir 'mobil';
@@ -204,18 +219,10 @@ sub introduce_newcomers
 	my @files = sort { -M $a <=> -M $b } grep { exists $self->{conf}{player}{$_} } readdir $dir;
 	closedir $dir;
 
-	WARRIOR: for my $player ( @files )
+	AGENT: for my $player ( @files )
 	{
 		my $date = localtime( $^T - (-M $player)/24*60*60 );
 		$self->log( "\t".$player."'s new agent is aboard (u/l'ed $date)" );
-		
-		# dead players can't submit agents
-		if( $self->{conf}{player}{$player}{status} eq 'EOT' )
-		{
-			$self->log( "\tplayer is eliminated, can't submit a new agent" );
-			unlink $player or $self->log( "ERROR: $!" );
-			next WARRIOR;
-		}
 		
 		my $fh;
 		my $code;
@@ -224,6 +231,16 @@ sub introduce_newcomers
 			open $fh, $player or die;
 			$code = <$fh>;
 			close $fh;
+		}
+		
+		push @{$self->{newcomers}}, [ $player, $date, $code  ];
+		
+		# dead players can't submit agents
+		if( $self->{conf}{player}{$player}{status} eq 'EOT' )
+		{
+			$self->log( "\tplayer is eliminated, can't submit a new agent" );
+			unlink $player or $self->log( "ERROR: $!" );
+			next AGENT;
 		}
 		
 		my @available_slots;
@@ -238,7 +255,7 @@ sub introduce_newcomers
 			$self->log( "\tagent inserted at cell $slot" );
 			$self->{theArray}[$slot] = { owner => $player, code => $code };
 			unlink $player or $self->log( "ERROR: $!" );
-			next WARRIOR;
+			next AGENT;
 		}
 		
 		for( 0..$self->{conf}{theArraySize}-1 )
@@ -252,7 +269,7 @@ sub introduce_newcomers
 			$self->log( "agent at cell $slot is upgraded" );
 			$self->{theArray}[$slot] = { owner => $player, code => $code };
 			unlink $player or $self->log( "ERROR: $!" );
-			next WARRIOR;
+			next AGENT;
 		}
 		
 		$self->log( "no empty slot left, agent deleted" ); 
@@ -360,8 +377,6 @@ sub runSlot
   	
   	my( $result, $error );
   	( $result, $error, @Array ) = $self->execute( @Array );
-
-	warn "POST-EXEC: $Array[0]";
 
 	$self->{theArray}[$slotId]{code} = $Array[0];
 

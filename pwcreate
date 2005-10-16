@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 use XML::Simple;
+use File::Copy;
 
 
 # TODO: add color entry for players and default colors
@@ -19,7 +20,24 @@ print "creating game directories $game_dir.. ";
 mkdir $game_dir or die "couldn't create directory $game_dir: $!\n";
 mkdir "$game_dir/history" or die "couldn't create directory $game_dir/history:$!\n";
 # TODO: change mobil to mobil_station
-mkdir "$game_dir/mobil" or die "couldn't create directory $game_dir/atrium:$!\n";
+mkdir "$game_dir/mobil" or die "couldn't create directory $game_dir/mobil:$!\n";
+
+my ( $location ) = grep -d "$_/Games/PerlWar/web", @INC or die "no installation of PerlWar found\n";
+
+print "found PerlWar at $location\n";
+
+$location = "$location/Games/PerlWar/web";
+
+copy( "$location/htaccess", "$game_dir/.htaccess" ) or die "coudn't copy .htaccess: $!\n";
+for( qw/ submit.epl perlwar.ico upload.epl / )
+{
+	copy( "$location/$_", "$game_dir/$_" ) or die "coudn't copy $_: $!\n";
+}
+for( qw/ include_config.xps  iteration2html.xps / )
+{
+	copy( "$location/stylesheets/$_", "$game_dir/$_" ) or die "coudn't copy $_: $!\n";	
+}
+
 
 print "\n\ngame configuration\n";
 my %conf;

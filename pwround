@@ -15,4 +15,4 @@ my $pw = new Games::PerlWar( shift );
 
 $pw->load;
 $pw->play_round;
-#$pw->save;
+$pw->save;

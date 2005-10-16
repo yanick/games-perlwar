@@ -1,2 +1,14 @@
 PerlWar.pm
 t/01general.t
+lib/Games/PerlWar/Rules.pm
+lib/Games/PerlWar/web/htaccess
+lib/Games/PerlWar/web/logo.png
+lib/Games/PerlWar/web/logo.svg
+lib/Games/PerlWar/web/perlwar.ico
+lib/Games/PerlWar/web/submit.epl
+lib/Games/PerlWar/web/template.html
+lib/Games/PerlWar/web/upload.epl
+lib/Games/PerlWar/web/upload.html
+lib/Games/PerlWar/web/upload_agent.epl
+lib/Games/PerlWar/web/stylesheets/include_config.xps
+lib/Games/PerlWar/web/stylesheets/iteration2html.xps
