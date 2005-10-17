@@ -1,6 +1,6 @@
 package Games::PerlWar;
 
-$Games::PerlWar::VERSION = 0.1;
+$Games::PerlWar::VERSION = 0.01;
 
 use strict;
 use warnings;
