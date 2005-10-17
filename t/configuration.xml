@@ -1,10 +1,1 @@
-<configuration currentIteration="13" gameLength="97" theArraySize="99">
-  <mamboDecrement>0</mamboDecrement>
-  <note>test
-</note>
-  <player name="yanick" color="pink" password="y" />
-  <player name="anja" color="lightblue" password="a" />
-  <snippetMaxLength>67</snippetMaxLength>
-  <title>test</title>
-  <gameStatus>ongoing</gameStatus>
-</configuration>
+<configuration><title>game5</title><gameStatus>ongoing</gameStatus><gameLength>97</gameLength><theArraySize>97</theArraySize><snippetMaxLength>67</snippetMaxLength><currentIteration>13</currentIteration><note>blah</note><player password="a" color="lightblue" status="">anja</player><player password="blah" color="" status="EOT">max</player><player password="y" color="pink" status="">yancik</player></configuration>

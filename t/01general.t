@@ -34,7 +34,6 @@ ok( $error ne "" );
 ( $result, $error, @Array ) = $pw->execute( '1 while 1' );
 ok( $error ne "" );
 
-
 ( $result, $error, @Array ) = $pw->execute( 'scalar @_', ('a')x99 );
 ok( $result, 100 );
 
@@ -51,7 +50,6 @@ ok( $result, "next cell" );
 
 # $S, $I, $i
 ( $result, $error, @Array ) = $pw->execute( '"$S:$I:$i"' );
-print "$error\n";
 ok( $result, '67:97:13' );
 
 # And now, operations
@@ -65,7 +63,6 @@ $pw->writeCell( 25, 'neo', '"^-1"' );
 
 $pw->play_round;
 
-warn join "\n", @{$pw->{log}};
 ok $pw->readCell(23), undef, "nuke function (!)";
 
 ok( ($pw->readCell(10))[0], 'neo', "alter function (~)" );

@@ -1,5 +1,10 @@
+Makefile.PL
 PerlWar.pm
+pwcreate
+pwround
 t/01general.t
+t/configuration.xml
+t/round_current.xml
 lib/Games/PerlWar/Rules.pm
 lib/Games/PerlWar/web/htaccess
 lib/Games/PerlWar/web/logo.png
@@ -12,3 +17,5 @@ lib/Games/PerlWar/web/upload.html
 lib/Games/PerlWar/web/upload_agent.epl
 lib/Games/PerlWar/web/stylesheets/include_config.xps
 lib/Games/PerlWar/web/stylesheets/iteration2html.xps
+lib/Games/PerlWar/web/stylesheets/configuration.xps
+META.yml                                 Module meta-data (added by MakeMaker)

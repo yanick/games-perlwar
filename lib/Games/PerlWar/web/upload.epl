@@ -1,13 +1,14 @@
 [! use XML::Simple; !]
 [-
-	$conf = XMLin( 'configuration.xml' );
+	$conf = XMLin( 'configuration.xml' );    
+	( $player ) = grep $_->{content} eq $fdat{player}, @{$conf->{player}};
 -]
 
 
 <html>
 <head><TITLE></TITLE></head>
 <body>
-[$ if $conf->{player}{$fdat{player}}{password} ne $fdat{password} $]
+[$ if $player->{password} ne $fdat{password} $]
 <p>player not recognized or password not valid</p>
 [$ else $]
 [-

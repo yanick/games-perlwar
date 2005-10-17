@@ -1,10 +1,14 @@
 package Games::PerlWar;
 
+$Games::PerlWar::VERSION = 0.1;
+
 use strict;
 use warnings;
 use utf8;
 
 use Safe;
+use XML::Simple;
+
 
 =pod
 
@@ -17,7 +21,6 @@ use Safe;
 
 =cut
 
-use XML::Simple;
 
 sub new 
 {
@@ -40,10 +43,19 @@ sub load
 	print "loading configuration.. ";
 
 	$self->{conf} = XMLin( 'configuration.xml' );
+	my %players;
+	for( @{$self->{conf}{player}} )
+	{
+		$players{ $_->{content} } = 
+			{ password => $_->{password},
+				color => $_->{color},
+				status => $_->{status} };
+	}
+	$self->{conf}{player} = \%players;
 
 	my $xml = XML::LibXML->new->parse_file( 'round_current.xml' );
 
-	$self->{round} = $xml->findvalue( '/round/@number' );
+	$self->{round} = $xml->findvalue( '/round/@number' ) || 0;
 	print "this is round $self->{round}\n";
 	my @theArray;
 	$self->{theArray} = \@theArray;
@@ -124,7 +136,9 @@ sub save
 	
 	print "saving round $self->{round}..\n";
 	
-	XMLout( $self->{conf}, OutputFile => "configuration.xml", RootName => 'configuration' );
+	$self->saveConfiguration;
+	
+	#XMLout( $self->{conf}, OutputFile => "configuration.xml", RootName => 'configuration' );
 	
 	use XML::Writer;
 	use IO::File;
@@ -180,6 +194,40 @@ sub save
 
 ##########################################################################
 
+sub saveConfiguration
+{
+	my %conf = @_ == 1 ? %{$_[0]->{conf}} : @_;
+	
+	my $output = new IO::File(">configuration.xml");
+	my $writer = new XML::Writer(OUTPUT => $output);
+
+	$writer->startTag( 'configuration' );
+	$writer->dataElement( 'title', $conf{title} );
+	$writer->dataElement( 'gameStatus', $conf{gameStatus} );
+	$writer->dataElement( 'gameLength', $conf{gameLength} );
+	$writer->dataElement( 'theArraySize', $conf{theArraySize} );
+	$writer->dataElement( 'snippetMaxLength', $conf{snippetMaxLength} );
+	
+	$writer->dataElement( 'currentIteration', $conf{currentIteration} );
+	if( $conf{mamboDecrement} )
+	{
+		$writer->dataElement( 'mamboDecrement', $conf{mamboDecrement} );
+	}
+	$writer->dataElement( 'note', $conf{note} );
+	
+	foreach( keys %{$conf{player}} )
+	{
+		$writer->dataElement( 'player', $_, color => $conf{player}{$_}{color}, 
+			password => $conf{player}{$_}{password}, status => $conf{player}{$_}{status} );
+	}
+	
+	$writer->endTag;
+	$writer->end;
+	$output->close;
+}
+
+##########################################################################
+
 sub checkForEliminatedPlayers
 {
 	my $self = shift;
@@ -216,8 +264,11 @@ sub introduce_newcomers
 	chdir 'mobil';
 	my $dir;
 	opendir $dir, '.' or die "couldn't open dir mobil: $!\n";
+	
 	my @files = sort { -M $a <=> -M $b } grep { exists $self->{conf}{player}{$_} } readdir $dir;
 	closedir $dir;
+	
+	$self->log( "\tno-one was aboard" ) if not @files;
 
 	AGENT: for my $player ( @files )
 	{
@@ -414,7 +465,6 @@ sub runSlot
 
       return if $pos == -1;
 
-	warn ">>>".$self->{theArray}[$pos].":".$self->{theArray}[$pos]{code};
 	  unless( $self->{theArray}[$pos] and $self->{theArray}[$pos]{code} )
 	  {
 	  	$self->log( "\tno agent to p0wn in cell $pos" );
@@ -430,7 +480,6 @@ sub runSlot
       my $pos = $self->relative_to_absolute_position( $slotId, $1 );
       return if $pos == -1;
       
-	warn ">>>".join( ":", %{$self->{theArray}[$pos]});
       unless( $self->{theArray}[$pos] and $self->{theArray}[$pos]{code} )
       {
       	$self->log( "\tno agent found at cell $pos" );
@@ -438,7 +487,6 @@ sub runSlot
       }
 
       $self->{theArray}[$pos]{code} = $Array[$relative];
-      warn join ":", @Array;
       $self->log( "\tcode of agent in cell $pos altered" );
       
     }

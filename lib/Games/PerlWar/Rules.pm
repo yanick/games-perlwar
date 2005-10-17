@@ -17,16 +17,20 @@ gain control of the vicious virtual battlefield known as... the Array.
 
 =over 
 
-=item *
-Size of the Array
+=item Size of the Array
 
-=item *
+The number of cells that the Array possesses. Each cell can hold one agent.
+
+=item Agent Maximal Size 
+
 The maximal length, in characters, of an agent. If an agent is or becomes larger than this limit, it automatically segfaults upon execution.
 
-=item *
+=item Game Maximal Number of Iterations
+
 The maximal number of rounds that can be played before a game is declared over.
 
 =back
+
 
 =head1 DESCRIPTION OF A TURN
 
@@ -99,22 +103,28 @@ relative to the position of the executing agent.
 =over
 
 =item $x:$y
+
 Copy the code of cell $x of @_ (as defined after execution of the agent) into position
 $y of the Array (relative to the position of the current agent). $x and $y must be 
 integers with an absolute value between 0 and $#_. 
 If either $x or $y are not explicitly given, they default to 
-the position 0. If the destination position is already occupied by a snippet belonging to
-a different player, the copy fails.
-E.g.:
+the position 0. If the destination position is already occupied by an agent belonging to
+a different player, the copy fails. If the copy succeed, the newly copied agent will only become operational during the next iteration (i.e., it will not be executed during
+the current iteration). 
+
+Example:
 
 	# crawler - copy itself to the next position
 	return ":1"
+	
+
 
 =item !$x
 
 Nuke the agent presents in position $x. The cell then 
 returns to its empty and unowned state. If $x is not given, defaults to 0.
-E.g.:
+
+Example:
 
 	# berserker
 	return '!'.1+int(rand(@_))
@@ -122,8 +132,10 @@ E.g.:
 =item ~$x
 
 Update the agent in position $x of the Array by its counterpart in @_. If $x is not explicitly given,
-defaults to 0. Ownership of the modified snippet isn't modified.
-E.g.:
+defaults to 0. Ownership of the modified agent isn't modified. If an agent isn't present,
+nothing happens.
+
+Example:
 
 	# drive neighbor to suicide
 	$_[1] =~ s//return "!"/;
@@ -133,7 +145,8 @@ E.g.:
 
 Claim ownership of the agent in position $x of the Array. If there is no agent at that 
 position, nothing happens.
-E.g.:
+
+Example:
 
 	# crawling borg
 	$pos = 1; 
@@ -148,6 +161,17 @@ E.g.:
 The game ends once the final round is played, or until all but one player have been eliminated. 
 The winner of the game is the player with the most agents still alive
 in the Array.
+
+=head1 GAME VARIANTS
+
+=over
+
+=item Mambo War
+
+In this variant, the agent maximal size is decremented after each turn. 
+
+=back
+
 
 =cut
 

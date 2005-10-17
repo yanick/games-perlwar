@@ -11,7 +11,9 @@
 #   MakeMaker Parameters:
 
 #     AUTHOR => q[Yanick Champoux <yanick@babyl.dyndns.org>]
+#     EXE_FILES => [q[pwcreate], q[pwround]]
 #     NAME => q[Games::PerlWar]
+#     VERSION_FROM => q[PerlWar.pm]
 
 # --- MakeMaker post_initialize section:
 
@@ -50,11 +52,11 @@ AR_STATIC_ARGS = cr
 DIRFILESEP = /
 NAME = Games::PerlWar
 NAME_SYM = Games_PerlWar
-VERSION = 
+VERSION = 0.1
 VERSION_MACRO = VERSION
-VERSION_SYM = 
+VERSION_SYM = 0_1
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 
+XS_VERSION = 0.1
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -136,7 +138,7 @@ FULLEXT = Games/PerlWar
 BASEEXT = PerlWar
 PARENT_NAME = Games
 DLBASE = $(BASEEXT)
-VERSION_FROM = 
+VERSION_FROM = PerlWar.pm
 OBJECT = 
 LDFROM = $(OBJECT)
 LINKTYPE = dynamic
@@ -146,7 +148,7 @@ XS_FILES =
 C_FILES  = 
 O_FILES  = 
 H_FILES  = 
-MAN1PODS = 
+MAN1PODS = pwround
 MAN3PODS = lib/Games/PerlWar/Rules.pm
 
 # Where is the Config information that we are using/depend on
@@ -171,73 +173,31 @@ PERL_ARCHIVE_AFTER =
 
 TO_INST_PM = PerlWar.pm \
 	lib/Games/PerlWar/Rules.pm \
-	lib/Games/PerlWar/web/a.xml~.bak \
 	lib/Games/PerlWar/web/htaccess \
-	lib/Games/PerlWar/web/htaccess.bak \
-	lib/Games/PerlWar/web/htaccess~.bak \
-	lib/Games/PerlWar/web/include_config.xps~.bak \
 	lib/Games/PerlWar/web/logo.png \
-	lib/Games/PerlWar/web/logo.png.bak \
 	lib/Games/PerlWar/web/logo.svg \
-	lib/Games/PerlWar/web/logo.svg.bak \
 	lib/Games/PerlWar/web/perlwar.ico \
-	lib/Games/PerlWar/web/perlwar.ico.bak \
-	lib/Games/PerlWar/web/round2html.html~.bak \
+	lib/Games/PerlWar/web/stylesheets/configuration.xps \
+	lib/Games/PerlWar/web/stylesheets/include_config.xps \
+	lib/Games/PerlWar/web/stylesheets/iteration2html.xps \
 	lib/Games/PerlWar/web/submit.epl \
-	lib/Games/PerlWar/web/submit.epl.bak \
-	lib/Games/PerlWar/web/submit.epl~.bak \
 	lib/Games/PerlWar/web/template.html \
-	lib/Games/PerlWar/web/template.html.bak \
-	lib/Games/PerlWar/web/template.html~.bak \
-	lib/Games/PerlWar/web/test.html~.bak \
 	lib/Games/PerlWar/web/upload.epl \
-	lib/Games/PerlWar/web/upload.epl.bak \
 	lib/Games/PerlWar/web/upload.html \
-	lib/Games/PerlWar/web/upload.html.bak \
-	lib/Games/PerlWar/web/upload_agent.epl \
-	lib/Games/PerlWar/web/upload_agent.epl.bak \
-	lib/Games/PerlWar/web/upload_agent.epl~.bak
+	lib/Games/PerlWar/web/upload_agent.epl
 
-PM_TO_BLIB = lib/Games/PerlWar/web/upload.epl.bak \
-	blib/lib/Games/PerlWar/web/upload.epl.bak \
-	lib/Games/PerlWar/web/logo.png.bak \
-	blib/lib/Games/PerlWar/web/logo.png.bak \
-	lib/Games/PerlWar/web/a.xml~.bak \
-	blib/lib/Games/PerlWar/web/a.xml~.bak \
-	lib/Games/PerlWar/web/upload_agent.epl.bak \
-	blib/lib/Games/PerlWar/web/upload_agent.epl.bak \
-	lib/Games/PerlWar/web/perlwar.ico.bak \
-	blib/lib/Games/PerlWar/web/perlwar.ico.bak \
+PM_TO_BLIB = lib/Games/PerlWar/web/upload.html \
+	blib/lib/Games/PerlWar/web/upload.html \
 	lib/Games/PerlWar/web/logo.png \
 	blib/lib/Games/PerlWar/web/logo.png \
-	lib/Games/PerlWar/web/htaccess~.bak \
-	blib/lib/Games/PerlWar/web/htaccess~.bak \
 	lib/Games/PerlWar/web/perlwar.ico \
 	blib/lib/Games/PerlWar/web/perlwar.ico \
-	lib/Games/PerlWar/web/template.html~.bak \
-	blib/lib/Games/PerlWar/web/template.html~.bak \
-	lib/Games/PerlWar/web/template.html \
-	blib/lib/Games/PerlWar/web/template.html \
-	lib/Games/PerlWar/web/submit.epl~.bak \
-	blib/lib/Games/PerlWar/web/submit.epl~.bak \
-	lib/Games/PerlWar/web/logo.svg.bak \
-	blib/lib/Games/PerlWar/web/logo.svg.bak \
+	lib/Games/PerlWar/web/stylesheets/iteration2html.xps \
+	blib/lib/Games/PerlWar/web/stylesheets/iteration2html.xps \
 	lib/Games/PerlWar/Rules.pm \
 	blib/lib/Games/PerlWar/Rules.pm \
-	lib/Games/PerlWar/web/submit.epl.bak \
-	blib/lib/Games/PerlWar/web/submit.epl.bak \
-	lib/Games/PerlWar/web/include_config.xps~.bak \
-	blib/lib/Games/PerlWar/web/include_config.xps~.bak \
-	lib/Games/PerlWar/web/upload.html.bak \
-	blib/lib/Games/PerlWar/web/upload.html.bak \
-	lib/Games/PerlWar/web/round2html.html~.bak \
-	blib/lib/Games/PerlWar/web/round2html.html~.bak \
-	lib/Games/PerlWar/web/upload.html \
-	blib/lib/Games/PerlWar/web/upload.html \
-	lib/Games/PerlWar/web/test.html~.bak \
-	blib/lib/Games/PerlWar/web/test.html~.bak \
-	lib/Games/PerlWar/web/htaccess.bak \
-	blib/lib/Games/PerlWar/web/htaccess.bak \
+	lib/Games/PerlWar/web/template.html \
+	blib/lib/Games/PerlWar/web/template.html \
 	lib/Games/PerlWar/web/upload_agent.epl \
 	blib/lib/Games/PerlWar/web/upload_agent.epl \
 	lib/Games/PerlWar/web/upload.epl \
@@ -248,10 +208,10 @@ PM_TO_BLIB = lib/Games/PerlWar/web/upload.epl.bak \
 	blib/lib/Games/PerlWar/web/logo.svg \
 	lib/Games/PerlWar/web/submit.epl \
 	blib/lib/Games/PerlWar/web/submit.epl \
-	lib/Games/PerlWar/web/upload_agent.epl~.bak \
-	blib/lib/Games/PerlWar/web/upload_agent.epl~.bak \
-	lib/Games/PerlWar/web/template.html.bak \
-	blib/lib/Games/PerlWar/web/template.html.bak \
+	lib/Games/PerlWar/web/stylesheets/configuration.xps \
+	blib/lib/Games/PerlWar/web/stylesheets/configuration.xps \
+	lib/Games/PerlWar/web/stylesheets/include_config.xps \
+	blib/lib/Games/PerlWar/web/stylesheets/include_config.xps \
 	PerlWar.pm \
 	$(INST_LIB)/Games/PerlWar.pm
 
@@ -316,7 +276,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Games-PerlWar
-DISTVNAME = Games-PerlWar-
+DISTVNAME = Games-PerlWar-0.1
 
 
 # --- MakeMaker macro section:
@@ -402,6 +362,16 @@ $(INST_ARCHAUTODIR)/.exists :: /usr/lib/perl5/5.8.4/i686-linux/CORE/perl.h
 
 	-$(NOECHO) $(CHMOD) $(PERM_RWX) $(INST_ARCHAUTODIR)
 
+config :: $(INST_MAN1DIR)$(DIRFILESEP).exists
+	$(NOECHO) $(NOOP)
+
+
+$(INST_MAN1DIR)/.exists :: /usr/lib/perl5/5.8.4/i686-linux/CORE/perl.h
+	$(NOECHO) $(MKPATH) $(INST_MAN1DIR)
+	$(NOECHO) $(EQUALIZE_TIMESTAMP) /usr/lib/perl5/5.8.4/i686-linux/CORE/perl.h $(INST_MAN1DIR)/.exists
+
+	-$(NOECHO) $(CHMOD) $(PERM_RWX) $(INST_MAN1DIR)
+
 config :: $(INST_MAN3DIR)$(DIRFILESEP).exists
 	$(NOECHO) $(NOOP)
 
@@ -457,8 +427,11 @@ POD2MAN = $(POD2MAN_EXE)
 
 
 manifypods : pure_all  \
+	pwround \
 	lib/Games/PerlWar/Rules.pm \
 	lib/Games/PerlWar/Rules.pm
+	$(NOECHO) $(POD2MAN) --section=1 --perm_rw=$(PERM_RW)\
+	  pwround $(INST_MAN1DIR)/pwround.$(MAN1EXT) 
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW)\
 	  lib/Games/PerlWar/Rules.pm $(INST_MAN3DIR)/Games::PerlWar::Rules.$(MAN3EXT) 
 
@@ -469,6 +442,34 @@ manifypods : pure_all  \
 
 
 # --- MakeMaker installbin section:
+
+$(INST_SCRIPT)/.exists :: /usr/lib/perl5/5.8.4/i686-linux/CORE/perl.h
+	$(NOECHO) $(MKPATH) $(INST_SCRIPT)
+	$(NOECHO) $(EQUALIZE_TIMESTAMP) /usr/lib/perl5/5.8.4/i686-linux/CORE/perl.h $(INST_SCRIPT)/.exists
+
+	-$(NOECHO) $(CHMOD) $(PERM_RWX) $(INST_SCRIPT)
+
+EXE_FILES = pwcreate pwround
+
+FIXIN = $(PERLRUN) "-MExtUtils::MY" -e "MY->fixin(shift)"
+
+pure_all :: $(INST_SCRIPT)/pwcreate $(INST_SCRIPT)/pwround
+	$(NOECHO) $(NOOP)
+
+realclean ::
+	$(RM_F) $(INST_SCRIPT)/pwcreate $(INST_SCRIPT)/pwround
+
+$(INST_SCRIPT)/pwcreate: pwcreate $(FIRST_MAKEFILE) $(INST_SCRIPT)/.exists
+	$(NOECHO) $(RM_F) $(INST_SCRIPT)/pwcreate
+	$(CP) pwcreate $(INST_SCRIPT)/pwcreate
+	$(FIXIN) $(INST_SCRIPT)/pwcreate
+	-$(NOECHO) $(CHMOD) $(PERM_RWX) $(INST_SCRIPT)/pwcreate
+
+$(INST_SCRIPT)/pwround: pwround $(FIRST_MAKEFILE) $(INST_SCRIPT)/.exists
+	$(NOECHO) $(RM_F) $(INST_SCRIPT)/pwround
+	$(CP) pwround $(INST_SCRIPT)/pwround
+	$(FIXIN) $(INST_SCRIPT)/pwround
+	-$(NOECHO) $(CHMOD) $(PERM_RWX) $(INST_SCRIPT)/pwround
 
 
 # --- MakeMaker subdirs section:
@@ -501,13 +502,10 @@ realclean_subdirs :
 realclean purge ::  clean realclean_subdirs
 	$(RM_RF) $(INST_AUTODIR) $(INST_ARCHAUTODIR)
 	$(RM_RF) $(DISTVNAME)
-	$(RM_F)  blib/lib/Games/PerlWar/web/perlwar.ico.bak blib/lib/Games/PerlWar/web/upload_agent.epl.bak blib/lib/Games/PerlWar/web/upload.epl.bak blib/lib/Games/PerlWar/web/upload.epl
-	$(RM_F) blib/lib/Games/PerlWar/web/round2html.html~.bak $(MAKEFILE_OLD) blib/lib/Games/PerlWar/web/upload_agent.epl blib/lib/Games/PerlWar/web/perlwar.ico blib/lib/Games/PerlWar/web/upload.html.bak
-	$(RM_F) blib/lib/Games/PerlWar/web/test.html~.bak blib/lib/Games/PerlWar/web/template.html blib/lib/Games/PerlWar/web/htaccess.bak blib/lib/Games/PerlWar/web/include_config.xps~.bak
-	$(RM_F) blib/lib/Games/PerlWar/web/upload.html blib/lib/Games/PerlWar/web/template.html~.bak $(FIRST_MAKEFILE) blib/lib/Games/PerlWar/web/a.xml~.bak blib/lib/Games/PerlWar/web/logo.png.bak
-	$(RM_F) blib/lib/Games/PerlWar/web/upload_agent.epl~.bak blib/lib/Games/PerlWar/Rules.pm blib/lib/Games/PerlWar/web/logo.png blib/lib/Games/PerlWar/web/htaccess blib/lib/Games/PerlWar/web/submit.epl~.bak
-	$(RM_F) blib/lib/Games/PerlWar/web/logo.svg.bak blib/lib/Games/PerlWar/web/logo.svg blib/lib/Games/PerlWar/web/template.html.bak $(INST_LIB)/Games/PerlWar.pm blib/lib/Games/PerlWar/web/submit.epl
-	$(RM_F) blib/lib/Games/PerlWar/web/submit.epl.bak blib/lib/Games/PerlWar/web/htaccess~.bak
+	$(RM_F)  blib/lib/Games/PerlWar/web/upload.epl $(MAKEFILE_OLD) blib/lib/Games/PerlWar/web/upload_agent.epl blib/lib/Games/PerlWar/web/perlwar.ico blib/lib/Games/PerlWar/web/stylesheets/iteration2html.xps
+	$(RM_F) blib/lib/Games/PerlWar/web/template.html blib/lib/Games/PerlWar/web/stylesheets/include_config.xps blib/lib/Games/PerlWar/web/upload.html $(FIRST_MAKEFILE) blib/lib/Games/PerlWar/Rules.pm
+	$(RM_F) blib/lib/Games/PerlWar/web/logo.png blib/lib/Games/PerlWar/web/htaccess blib/lib/Games/PerlWar/web/logo.svg blib/lib/Games/PerlWar/web/stylesheets/configuration.xps $(INST_LIB)/Games/PerlWar.pm
+	$(RM_F) blib/lib/Games/PerlWar/web/submit.epl
 
 
 # --- MakeMaker metafile section:
@@ -515,8 +513,8 @@ metafile :
 	$(NOECHO) $(ECHO) '# http://module-build.sourceforge.net/META-spec.html' > META.yml
 	$(NOECHO) $(ECHO) '#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#' >> META.yml
 	$(NOECHO) $(ECHO) 'name:         Games-PerlWar' >> META.yml
-	$(NOECHO) $(ECHO) 'version:      ' >> META.yml
-	$(NOECHO) $(ECHO) 'version_from: ' >> META.yml
+	$(NOECHO) $(ECHO) 'version:      0.1' >> META.yml
+	$(NOECHO) $(ECHO) 'version_from: PerlWar.pm' >> META.yml
 	$(NOECHO) $(ECHO) 'installdirs:  site' >> META.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META.yml
 	$(NOECHO) $(ECHO) '' >> META.yml
@@ -783,7 +781,7 @@ testdb_static :: testdb_dynamic
 # --- MakeMaker ppd section:
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd:
-	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="0,0,0,0">' > $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="0,1,0,0">' > $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <TITLE>$(DISTNAME)</TITLE>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <ABSTRACT></ABSTRACT>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Yanick Champoux &lt;yanick@babyl.dyndns.org&gt;</AUTHOR>' >> $(DISTNAME).ppd
@@ -799,33 +797,19 @@ ppd:
 
 pm_to_blib: $(TO_INST_PM)
 	$(NOECHO) $(PERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', '\''$(PM_FILTER)'\'')'\
-	  lib/Games/PerlWar/web/upload.epl.bak blib/lib/Games/PerlWar/web/upload.epl.bak \
-	  lib/Games/PerlWar/web/logo.png.bak blib/lib/Games/PerlWar/web/logo.png.bak \
-	  lib/Games/PerlWar/web/a.xml~.bak blib/lib/Games/PerlWar/web/a.xml~.bak \
-	  lib/Games/PerlWar/web/upload_agent.epl.bak blib/lib/Games/PerlWar/web/upload_agent.epl.bak \
-	  lib/Games/PerlWar/web/perlwar.ico.bak blib/lib/Games/PerlWar/web/perlwar.ico.bak \
-	  lib/Games/PerlWar/web/logo.png blib/lib/Games/PerlWar/web/logo.png \
-	  lib/Games/PerlWar/web/htaccess~.bak blib/lib/Games/PerlWar/web/htaccess~.bak \
-	  lib/Games/PerlWar/web/perlwar.ico blib/lib/Games/PerlWar/web/perlwar.ico \
-	  lib/Games/PerlWar/web/template.html~.bak blib/lib/Games/PerlWar/web/template.html~.bak \
-	  lib/Games/PerlWar/web/template.html blib/lib/Games/PerlWar/web/template.html \
-	  lib/Games/PerlWar/web/submit.epl~.bak blib/lib/Games/PerlWar/web/submit.epl~.bak \
-	  lib/Games/PerlWar/web/logo.svg.bak blib/lib/Games/PerlWar/web/logo.svg.bak \
-	  lib/Games/PerlWar/Rules.pm blib/lib/Games/PerlWar/Rules.pm \
-	  lib/Games/PerlWar/web/submit.epl.bak blib/lib/Games/PerlWar/web/submit.epl.bak \
-	  lib/Games/PerlWar/web/include_config.xps~.bak blib/lib/Games/PerlWar/web/include_config.xps~.bak \
-	  lib/Games/PerlWar/web/upload.html.bak blib/lib/Games/PerlWar/web/upload.html.bak \
-	  lib/Games/PerlWar/web/round2html.html~.bak blib/lib/Games/PerlWar/web/round2html.html~.bak \
 	  lib/Games/PerlWar/web/upload.html blib/lib/Games/PerlWar/web/upload.html \
-	  lib/Games/PerlWar/web/test.html~.bak blib/lib/Games/PerlWar/web/test.html~.bak \
-	  lib/Games/PerlWar/web/htaccess.bak blib/lib/Games/PerlWar/web/htaccess.bak \
+	  lib/Games/PerlWar/web/logo.png blib/lib/Games/PerlWar/web/logo.png \
+	  lib/Games/PerlWar/web/perlwar.ico blib/lib/Games/PerlWar/web/perlwar.ico \
+	  lib/Games/PerlWar/web/stylesheets/iteration2html.xps blib/lib/Games/PerlWar/web/stylesheets/iteration2html.xps \
+	  lib/Games/PerlWar/Rules.pm blib/lib/Games/PerlWar/Rules.pm \
+	  lib/Games/PerlWar/web/template.html blib/lib/Games/PerlWar/web/template.html \
 	  lib/Games/PerlWar/web/upload_agent.epl blib/lib/Games/PerlWar/web/upload_agent.epl \
 	  lib/Games/PerlWar/web/upload.epl blib/lib/Games/PerlWar/web/upload.epl \
 	  lib/Games/PerlWar/web/htaccess blib/lib/Games/PerlWar/web/htaccess \
 	  lib/Games/PerlWar/web/logo.svg blib/lib/Games/PerlWar/web/logo.svg \
 	  lib/Games/PerlWar/web/submit.epl blib/lib/Games/PerlWar/web/submit.epl \
-	  lib/Games/PerlWar/web/upload_agent.epl~.bak blib/lib/Games/PerlWar/web/upload_agent.epl~.bak \
-	  lib/Games/PerlWar/web/template.html.bak blib/lib/Games/PerlWar/web/template.html.bak \
+	  lib/Games/PerlWar/web/stylesheets/configuration.xps blib/lib/Games/PerlWar/web/stylesheets/configuration.xps \
+	  lib/Games/PerlWar/web/stylesheets/include_config.xps blib/lib/Games/PerlWar/web/stylesheets/include_config.xps \
 	  PerlWar.pm $(INST_LIB)/Games/PerlWar.pm 
 	$(NOECHO) $(TOUCH) $@
 

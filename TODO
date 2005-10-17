@@ -1,7 +1,9 @@
-- can only p0wn cells with agents
 - trunk the output of an agent to 10 characters
-- Add newcomers in the round file
-- Add configuration page
 - Produce DTD
 - Cell id in hexadecimal (heh heh heh)
+- Single CSS file for everyone
+- in configuration.xps, check if open-ended
+- Make logo for ____ THE ARRAY ----
+- For empty cells, show 'empty'
+- Give the possibility to d/l the raw xml
 

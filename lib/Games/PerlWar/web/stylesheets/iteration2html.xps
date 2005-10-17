@@ -172,7 +172,7 @@ entry { display: block }
 	$players{''} = { color => 'lightgrey' };
 	for( findnodes( '/perlwar/configuration/player' ) )
 	{
-		my $name = $_->getAttribute( 'name' );
+		my $name = $_->findvalue('./text()');
 		$players{ $name  } = { color => $_->getAttribute( 'color' ) };
 		$players{ $name }{status} = $_->getAttribute( 'status' );
 		$players{ $names }{score} = 0;
@@ -227,7 +227,7 @@ entry { display: block }
 <div style="margin-left: 10px">
 
 iteration <SELECT name="history_select">
-<% for( reverse 0..findvalue( '/perlwar/configuration/@currentIteration' ) ) { %>
+<% for( reverse 0..findvalue( '/perlwar/configuration/currentIteration/text()' ) ) { %>
 	<option value='<%= sprintf 'round_%05d.xml', $_ %>'><%= $_ %></option> 
 <% } %>
 </SELECT>&nbsp;
@@ -236,7 +236,7 @@ iteration <SELECT name="history_select">
 </form>
 <br/>
 <br/>
-<a href="whatisperlwar.html">what is perlwar?</a>
+<a href="http://babyl.dyndns.org/perlwar">what is perlwar?</a>
 
 
 </div>
@@ -247,9 +247,9 @@ iteration <SELECT name="history_select">
 <div class="theArray" style="clear: both;">
 <% 
 
-my $fill = length findvalue( '/perlwar/configuration/@theArraySize' );
+my $fill = length findvalue( '/perlwar/configuration/theArraySize/text()' );
 
-for( 0..findvalue( '/perlwar/configuration/@theArraySize' ) -1 ) { %>
+for( 0..findvalue( '/perlwar/configuration/theArraySize/text()' ) -1 ) { %>
 <div name='slot' 
 	class="slot" 
 	style='background-color: <%= $players{ findvalue( "/perlwar/round/theArray/slot[\@id = $_]/owner/text()" ) }{color} %>'  
@@ -261,7 +261,7 @@ for( 0..findvalue( '/perlwar/configuration/@theArraySize' ) -1 ) { %>
 <INPUT type="submit" value="show log" onclick="showLog()">
 <div class="console">
 <div name='log' class='log'><%= apply_templates( '/perlwar/round/log' ) %></div>
-<% for( 0..findvalue( '/perlwar/configuration/@theArraySize' ) -1 ) { %>
+<% for( 0..findvalue( '/perlwar/configuration/theArraySize/text()' ) -1 ) { %>
 	<div name="slotCode" class="slotCode" id='<%= $_ %>'><%= findvalue( "/perlwar/round/theArray/slot[\@id = $_]/code/text()" ) %></div>	
 <% } %>
 </div>

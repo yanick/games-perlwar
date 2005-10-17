@@ -4,48 +4,56 @@ $t->{title}{showtag} = 0;
 
 <html>
 <head>
-<TITLE>perlwar : <%= findvalue( '/configuration/@title' ) %></TITLE>
+<TITLE>perlwar : <%= findvalue( '/configuration/title/text()' ) %></TITLE>
 <LINK REL="icon" HREF="perlwar.ico" >
 <LINK REL="SHORTCUT ICON" HREF="perlwar.ico">
+<style>
+BODY { background-color: black; color: lightgreen; font-family: sans-serif;}
+
+A:link { text-decoration: overline; color: #00A713  }
+A:visited { text-decoration: overline; color: #00A713  }
+A:active { text-decoration: overline; color: maroon }
+
+
+dt { font-weight: bold; }
+</style>
 </head>
 <body>
 
-<h1>PerlWar : <%= findvalue( '/configuration/@title' ) %></h1>
+<h1>PerlWar : <%= findvalue( '/configuration/title/text()' ) %></h1>
 
 <h2>settings</h2>
 
 <dl>
-<dt>Game length<dt><dd><%= findvalue( '/configuration/@gameLength' ) %></dd>
-<dt>Agent maximal size</dt><dd><%= findvalue( '/configuration/@snippetMaxLength' ) %> characters</dd>
+<dt>Game length<dt><dd><%= findvalue( '/configuration/gameLength/text()' ) %> iterations</dd>
+<dt>Array size</dt><dd><%= findvalue( '/configuration/theArraySize/text()' ) %> cells</dd>
+<dt>Agent maximal size</dt><dd><%= findvalue( '/configuration/snippetMaxLength/text()' ) %> characters</dd>
 <% if ( my $m = findvalue( '/configuration/mamboDecrement/text()' ) ) { %>
 <dt>mambo option</dt><dd>enabled</dd>
 <dt>mambo decrement per turn</dt><dd><%= $m %></dd>
-<% } else { %>
-<dt>mambo option</dt><dd>disabled</dd>
 <% } %>
-<dt>Array size</dt><dd>findvalue( '/configuration/@theArraySize' )</dd>
+
 </dl>
 
-
-<% if ( my $n = findvalue( '/configuration/@note' ) ) { %>
+<% if ( my $n = findvalue( '/configuration/note/text()' ) ) { %>
 <h2>notes</h2>
 
 <pre><%= $n %></pre>
 
 <% } %>
 
-<h2>current Status</h2>
+<h2>Current Status</h2>
 
 <dl>
-<dt>Current iteration<dt><dd><%= findvalue( '/configuration/@currentIteration' ) %></dd>
-<dt>Game status</dt><dd><%= findvalue( '/configuration/@gameStatus' ) %></dd>
+<dt>Current iteration<dt><dd><%= findvalue( '/configuration/currentIteration/text()' ) %></dd>
+<dt>Game status</dt><dd><%= findvalue( '/configuration/gameStatus/text()' ) %></dd>
 </dl>
 
 <h3>Players</h3>
 
 <dl>
 <% foreach my $p ( findnodes( '/configuration/player' ) ) { %>
-<dt><%= $p->findvalue( './@name' ) %></dt>
+<dt><%= $p->findvalue( './text()' ) %></dt>
 <dd><%= $p->findvalue( './@status' ) || 'active' %></dd>
 <% } %>
 </dl>
