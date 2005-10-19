@@ -265,7 +265,7 @@ sub introduce_newcomers
 	my $dir;
 	opendir $dir, '.' or die "couldn't open dir mobil: $!\n";
 	
-	my @files = sort { -M $a <=> -M $b } grep { exists $self->{conf}{player}{$_} } readdir $dir;
+	my @files = sort { -M $b <=> -M $a } grep { exists $self->{conf}{player}{$_} } readdir $dir;
 	closedir $dir;
 	
 	$self->log( "\tno-one was aboard" ) if not @files;
@@ -372,7 +372,7 @@ sub execute
 	   
 	# run this in a safe
 	my $safe = new Safe 'Container';
-	$safe->permit( qw/ time sort :browse :default / );
+	$safe->permit( qw/ rand time sort :browse :default / );
 	my $result;
 	my $error;
   
