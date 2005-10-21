@@ -221,6 +221,9 @@ entry { display: block }
 
 <a href="upload.html">u/l agent</a>
 <br/><br/>
+<a href=".?passthru=1">raw xml</a>
+
+<br/><br/>
 
 <form name='history_form' onSubmit="resolve_iteration();return true;">
 <b>log</b><br/>
