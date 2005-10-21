@@ -115,7 +115,7 @@ sub play_round
 	# sanity check, make sure cells without agents are without owner
 	for( 0..$self->{conf}{theArraySize}-1 )
 	{
-		if( $self->{theArray}[ $_ ]{owner} and not $self->{theArray}[ $_ ]{code} ) 
+		if( $self->{theArray}[ $_ ]{owner} and not length $self->{theArray}[ $_ ]{code} ) 
 		{
 			$self->log( "warning: cell at position is empty and yet owned. Correcting the Array.." );
 			$self->{theArray}[ $_ ] = undef;
@@ -388,16 +388,26 @@ sub execute
 		$Container::i = $self->{conf}{currentIteration};
 		$safe->share( '$S', '$I', '$i', '@_' );
 		$result = $safe->reval( <<EOT );
-local *_ = *Array;
+local *_ = \\\@Array;
+#*_ = *Array;
 \$_ = \$_[0];
 $code
 EOT
-    	$code = $_[0];
+	
     	$error = $@;   
     	alarm 0;
   	};
 
-	return ( $result, $error, $error? undef : $safe->reval( '@Array' ) );
+	if( $error )
+	{
+		return( $result, $error );
+	}
+	else
+	{
+		my @array = $safe->reval( '@Array' );
+		$array[0] = $safe->reval( '$_' );
+		return( $result, $error, @array );
+	}
 }
 
 ##########################################################################
@@ -417,7 +427,7 @@ sub runSlot
 	my @Array = map $_->{code}, @{$self->{theArray}}[ $slotId..(@{$self->{theArray}}-1), 0..($slotId-1) ];
  
 	# exceed permited size?
-  	if( length > $self->{conf}{snippetMaxLength} )
+  	if( length $slot{code} > $self->{conf}{snippetMaxLength} )
   	{
     	$self->log( "\tagent crashed: is ".length($Array[0])." chars, exceeds max permitted size $self->{conf}{snippetMaxSize}" ); 
     	$self->{theArray}[ $slotId ] = {};
@@ -509,7 +519,7 @@ sub runSlot
       }
 
       $self->log( "\tagent of cell $src_pos copied into cell $dest_pos" );
-      $self->{theArray}[$dest_pos] = \%{$self->{theArray}[$src_pos]};
+      $self->{theArray}[$dest_pos] = { %{$self->{theArray}[$src_pos]} };
       $self->{theArray}[$dest_pos]{freshly_copied} = 1 ;
     }
     else

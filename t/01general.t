@@ -5,7 +5,7 @@ use Test;
 
 BEGIN
 {
-    plan tests => 16, todo => [];
+    plan tests => 20, todo => [];
 }
 
 use Games::PerlWar;
@@ -69,6 +69,15 @@ ok( ($pw->readCell(10))[0], 'neo', "alter function (~)" );
 ok( ($pw->readCell(10))[1], '"#13"', "alter function (~)" );
 ok( ($pw->readCell(24))[0], 'neo', 'p0wning function (^)' );
 
+# 0wning
+$pw->{theArray}[0] = { owner => 'luigi', code => "':2'" };
+$pw->{theArray}[1] = { owner => 'mario', code => "'^1'" };
+$pw->play_round;
+ok $pw->{theArray}[0]{owner}, 'luigi', "parents shouldn't be 0wned";
+ok $pw->{theArray}[$_]{owner}, 'mario', "0wning" for 1..2;
 
+# self-modification
+
+ok( ($pw->execute( '$_="tadam"' ))[2], 'tadam', "self-modification" );
 
 

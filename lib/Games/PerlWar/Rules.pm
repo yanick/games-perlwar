@@ -69,11 +69,12 @@ the code of the agent.
 
 =item @_
 
-the whole Array, positioned relatively to the current agent. (i.e., $_[0] == $_ )
+the whole Array, positioned relatively to the current agent. (i.e., $_[0] eq $_ )
 
 =item $S, $I, $i
 
-the game's parameters $S (max agent's size) and $I (max # of iterations), plus the current iteration $i.
+the game's parameters $S (max agent's size) and $I (max # of iterations), plus the current iteration $i. 
+Those are local variables and can't be used to modified the game parameters, obviously.
 
 =back
 
