@@ -22,6 +22,9 @@ dt { font-weight: bold; }
 
 <h1>PerlWar : <%= findvalue( '/configuration/title/text()' ) %></h1>
 
+<% use Games::PerlWar; %>
+<p>using Perlwar version <%= $Games::PerlWar::VERSION %>
+
 <h2>settings</h2>
 
 <dl>
