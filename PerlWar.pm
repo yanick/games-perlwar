@@ -1,6 +1,6 @@
 package Games::PerlWar;
 
-$Games::PerlWar::VERSION = 0.01;
+$Games::PerlWar::VERSION = 0.02;
 
 use strict;
 use warnings;
@@ -272,7 +272,7 @@ sub introduce_newcomers
 
 	AGENT: for my $player ( @files )
 	{
-		my $date = localtime( $^T - (-M $player)/24*60*60 );
+		my $date = localtime( $^T - (-M $player)*24*60*60 );
 		$self->log( "\t".$player."'s new agent is aboard (u/l'ed $date)" );
 		
 		my $fh;
