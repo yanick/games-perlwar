@@ -311,7 +311,7 @@ sub introduce_newcomers
 		
 		for( 0..$self->{conf}{theArraySize}-1 )
 		{
-			push @available_slots, $_ if $self->{theArray}[$_]{owner} = $player;
+			push @available_slots, $_ if $self->{theArray}[$_]{owner} eq $player;
 		}
 		
 		if( @available_slots > 0 )
@@ -386,7 +386,7 @@ sub execute
 		$Container::S = $self->{conf}{snippetMaxLength};
 		$Container::I = $self->{conf}{gameLength};
 		$Container::i = $self->{conf}{currentIteration};
-		$safe->share( '$S', '$I', '$i', '@_' );
+		$safe->share_from( 'Container', [ '$S', '$I', '$i', '@_' ] );
 		$result = $safe->reval( <<EOT );
 local *_ = \\\@Array;
 #*_ = *Array;
