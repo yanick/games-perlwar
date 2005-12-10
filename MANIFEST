@@ -1,3 +1,4 @@
+MANIFEST
 Makefile.PL
 Changes
 PerlWar.pm
@@ -6,6 +7,7 @@ pwround
 t/01general.t
 t/configuration.xml
 t/round_current.xml
+t/pod.t
 lib/Games/PerlWar/Rules.pm
 lib/Games/PerlWar/web/htaccess
 lib/Games/PerlWar/web/logo.png
