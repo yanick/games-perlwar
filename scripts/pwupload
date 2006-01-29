@@ -1,0 +1,27 @@
+#!/usr/bin/perl 
+
+use strict;
+use warnings;
+
+=pod
+
+    usage: pwupload $game_dir $player
+
+=cut
+
+my( $game_dir, $player ) = @ARGV;
+
+my $agent_repository = "$game_dir/mobil";
+
+unless( -d $agent_repository ) {
+    die "$agent_repository is not a directory: $!\n";
+}
+
+open my $agent, '>', "$agent_repository/$player" 
+    or die "couldn't create agent file: $!\n";
+
+while( my $line = <STDIN> ) {
+    print {$agent} $line;
+}
+
+exit;
