@@ -1,6 +1,6 @@
 package Games::PerlWar;
 
-$Games::PerlWar::VERSION = 0.02;
+use version; our $VERSION = qv('0.1_1');
 
 use strict;
 use warnings;
@@ -10,34 +10,19 @@ use Safe;
 use XML::Simple;
 
 
-=pod
-
-  $pw = new Games::PerlWar( );
-
-  perl -MGames::PerlWar -e'create()'
-  pwcreate
-  perl -M..   -e'playround()'
-  pwplayround
-
-=cut
-
-
-sub new 
-{
+sub new {
     my( $class, $dir ) = @_;
     my $self = { dir => $dir, interactive => 1 };
     chdir $self->{dir};
     bless $self, $class;
 }
 
-sub clear_log
-{
+sub clear_log {
 	my $self = shift;
 	$self->{log} = ();
 }
 
-sub load 
-{
+sub load {
 	my $self = shift;
 	
 	print "loading configuration.. ";
@@ -453,79 +438,94 @@ sub runSlot
   	
     $self->log( "\tagent returned: $output" );
     
-    if( $result =~ /^!(-?\d*)$/ )   # !613 - nuke
-    {
-		my $pos = $self->relative_to_absolute_position( $slotId, $1 || 0 );
-		return if $pos == -1;
-		
-        if( $self->{theArray}[ $pos ] )
-        {
-        	$self->{theArray}[ $pos ] = { };
-        	$self->log( "\tagent in cell $pos destroyed" );
-        }
-        else
-        {
-        	$self->log( "\tno agent found at cell $pos" );
-        }
+    if( $result =~ /^!(-?\d*)$/ ) {
+        $self->_nuke_operation( $slotId, $1 );
     }
-    elsif( $result =~ /^\^(-?\d*)$/ )  # ^613  - p0wning
-    {
-
-      my $pos = $self->relative_to_absolute_position( $slotId, $1 );
-
-      return if $pos == -1;
-
-	  unless( $self->{theArray}[$pos] and $self->{theArray}[$pos]{code} )
-	  {
-	  	$self->log( "\tno agent to p0wn in cell $pos" );
-		return;
-	  }
-
-      $self->log( "\tagent in cell $pos p0wned" );
-      $self->{theArray}[$pos]{owner} = $self->{theArray}[$slotId]{owner};
+    elsif( $result =~ /^\^(-?\d*)$/ ) {
+        $self->_p0wn_operation( $slotId, $1 );
     }
-    elsif( $result =~ /^~(-?\d*)$/ )  # ~613
-    {
-      my $relative = $1;
-      my $pos = $self->relative_to_absolute_position( $slotId, $1 );
-      return if $pos == -1;
-      
-      unless( $self->{theArray}[$pos] and $self->{theArray}[$pos]{code} )
-      {
-      	$self->log( "\tno agent found at cell $pos" );
-      	return;
-      }
-
-      $self->{theArray}[$pos]{code} = $Array[$relative];
-      $self->log( "\tcode of agent in cell $pos altered" );
-      
+    elsif( $result =~ /^~(-?\d*)$/ ) {
+        $self->_alter_operation( $slotId, $1, \@Array );
     }
-    elsif( $result =~ /^(-?\d*):(-?\d*)$/ )  # 212:213
-    {
+    elsif( $result =~ /^(-?\d*):(-?\d*)$/ ) {
+        $self->_copy_operation( $slotId, $1, $2 );
+    }
+    else {
+    	$self->_noop_operation();
+    }
+}
+
+sub _nuke_operation {
+    my( $self, $agent_index, $target_index ) = @_;
+
+    $target_index = $self->relative_to_absolute_position( $agent_index, $target_index );
+    return if $target_index == -1;
     
-	# big problem here. we don't want a newly copied guy to be effective
-	# during the same turn
-	
-      my $src_pos += $self->relative_to_absolute_position( $slotId, $1 );
-      my $dest_pos += $self->relative_to_absolute_position( $slotId, $2 );
-
-      return if $src_pos == -1 or $dest_pos == -1;
-
-      if( $self->{theArray}[$dest_pos]{owner} and
-          $self->{theArray}[$dest_pos]{owner} ne $self->{theArray}[$slotId]{owner} ) 
-      {
-        $self->log( "\tagent in cell $dest_pos already owned by $self->{theArray}[$dest_pos]{owner}" );
+    unless( $self->{theArray}[ $target_index ] ) {
+        $self->log( "\tno agent found at cell $target_index" );
         return;
-      }
+    }
+		
+    $self->{theArray}[ $target_index ] = { };
+    $self->log( "\tagent in cell $target_index destroyed" );
+}
 
-      $self->log( "\tagent of cell $src_pos copied into cell $dest_pos" );
-      $self->{theArray}[$dest_pos] = { %{$self->{theArray}[$src_pos]} };
-      $self->{theArray}[$dest_pos]{freshly_copied} = 1 ;
+sub _p0wn_operation {
+    my( $self, $agent_index, $target_index ) = @_;
+
+    $target_index = $self->relative_to_absolute_position( $agent_index, $target_index );
+
+    return if $target_index == -1;
+
+    unless( $self->{theArray}[$target_index] and $self->{theArray}[$target_index]{code} ) {
+	   $self->log( "\tno agent to p0wn in cell $target_index" );
+	   return;
     }
-    else
+
+    $self->log( "\tagent in cell $target_index p0wned" );
+    $self->{theArray}[$target_index]{owner} = $self->{theArray}[$agent_index]{owner};
+}
+
+sub _alter_operation {
+    my ( $self, $agent_index, $target_index, $Array_ref ) = @_;
+
+    my $abs_target_index = $self->relative_to_absolute_position( $agent_index, $target_index );
+    return if $abs_target_index == -1;
+      
+    unless( $self->{theArray}[$abs_target_index] and $self->{theArray}[$abs_target_index]{code} ) {
+        $self->log( "\tno agent found at cell $abs_target_index" );
+      	return;
+    }
+
+    $self->{theArray}[$abs_target_index]{code} = $Array_ref->[$target_index];
+    $self->log( "\tcode of agent in cell $abs_target_index altered" );
+}
+
+sub _copy_operation {
+    my( $self, $agent_index, $source_index, $dest_index ) = @_;
+    
+    $source_index = $self->relative_to_absolute_position( $agent_index, $source_index );
+    $dest_index   = $self->relative_to_absolute_position( $agent_index, $dest_index );
+    
+    # source or destination invalid? We do nothing
+    return if $source_index == -1 or $dest_index == -1;
+    
+    if( $self->{theArray}[$dest_index]{owner} 
+            and $self->{theArray}[$dest_index]{owner} ne $self->{theArray}[$agent_index]{owner} )
     {
-    	$self->log( "\tno-op" );
+        $self->log( "\tagent in cell $dest_index already owned by $self->{theArray}[$dest_index]{owner}" );
+        return;
     }
+
+    $self->log( "\tagent of cell $source_index copied into cell $dest_index" );
+    $self->{theArray}[$dest_index] = { %{$self->{theArray}[$source_index]} };
+    $self->{theArray}[$dest_index]{freshly_copied} = 1 ;
+}
+
+sub _noop_operation {
+    my( $self ) = @_;
+    
+    $self->log( "\tno-op" );
 }
 
 sub relative_to_absolute_position
@@ -543,21 +543,19 @@ sub relative_to_absolute_position
   return $slotId;
 }
 
-sub readCell
-{
+sub readCell {
 	my( $self, $cellId ) = @_;
 	return undef unless $self->{theArray}[$cellId];
 	return ( $self->{theArray}[$cellId]{owner}, $self->{theArray}[$cellId]{code}  );
 }
 
-sub writeCell
-{
+sub writeCell {
 	my( $self, $pos, $owner, $code ) = @_;
 	$self->{theArray}[$pos] = { owner => $owner, code => $code };
 }
 
 
-=pod
+=begin notes
 
 my $pw = new Games::PerlWar;
 
@@ -578,6 +576,74 @@ $pw->{config}{maxSnippetSize} = 100;
 
 $pw->runSlot( $_ ) for 0..9;
 
+=end notes
+
 =cut
 
 1;
+
+__END__
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#  Module Documentation
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+=head1 NAME
+
+Games::PerlWar - A Perl variant of the classic Corewar game
+
+=head1 DESCRIPTION
+
+For the rules of PerlWar, please refers to the Games::PerlWar::Rules manpage.
+
+=head1 HOW TO START AND MANAGE A PW GAME (THE SHORT AND SKINNY)
+
+Use the script I<pwcreate> to create a new game. 
+
+    $ pwcreate [ <game_directory> ]
+
+pwcreate will create I<game_directory> and populate it with the everything
+the new game will need. If I<game_directory> is not provided, I<pwcreate> will
+create a sub-directory called 'game'. 
+
+Once the game is created, 
+the script I<pwupload> can be used to submit the agents to
+be introduced into the Array:
+
+    $ pwupload <game_directory> <player> 
+
+I<pwupload> takes two arguments: the game directory and the name of
+the agent's owner. The script then reads the script from STDIN. 
+E.g.:
+
+    $ pwupload /home/perlwar/myWar yanick < borg.pl
+
+Finally, I<pwround> executes an iteration of the game:
+
+    $ pwround <game_directory>
+
+I<pwround> isn't interactive and can easily be called from a cron job.
+
+=head1 BUGS AND LIMITATIONS
+
+I<pwupload> currently only works for local games. It will be
+soonishly extended to allow submissions to network games.
+
+=head1 AUTHOR
+
+Yanick Champoux (yanick@perl.org)
+
+=head1 LICENCE AND COPYRIGHT
+
+Copyright (c) 2005, 2006 Yanick Champoux (yanick@cpan.org). All rights reserved.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See perldoc perlartistic.
+
+This program is distributed in the hope that it will be useful
+(or at least entertaining), but WITHOUT ANY WARRANTY; without 
+even the implied warranty of MERCHANTABILITY or FITNESS FOR 
+A PARTICULAR PURPOSE.
+
+=cut
+
