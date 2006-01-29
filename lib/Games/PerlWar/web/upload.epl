@@ -1,6 +1,12 @@
 [! use XML::Simple; !]
 [-
-	$conf = XMLin( 'configuration.xml' );    
+	open CONF, "configuration.xml";
+	local $/;
+        undef $/;
+
+	$conf = XMLin( <CONF> );
+	close CONF;
+
 	( $player ) = grep $_->{content} eq $fdat{player}, @{$conf->{player}};
 -]
 
