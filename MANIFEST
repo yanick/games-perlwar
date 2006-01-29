@@ -2,8 +2,9 @@ MANIFEST
 Makefile.PL
 Changes
 PerlWar.pm
-pwcreate
-pwround
+scripts/pwcreate
+scripts/pwround
+scripts/pwupload
 t/01general.t
 t/configuration.xml
 t/round_current.xml
