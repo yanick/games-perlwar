@@ -106,3 +106,48 @@ for my $filename ( qw/ round_current.xml round_00000.xml / )
 print "\ngame '$game_name' created\n";
 
 exit;
+
+__END__
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#  Application Documentation
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+=head1 NAME
+
+pwcreate - create a new PerlWar game directory
+
+=head1 SYNOPSIS
+
+pwcreate [ I<game_dir> ]
+
+=head1 DESCRIPTION
+
+Creates the directory I<game_dir> and populate it with 
+all the files and sub-directories needed for a
+PerlWar game. If I<game_dir> is not specified,
+'game' is assumed by default. 
+
+=head1 BUGS AND LIMITATIONS
+
+There are no known bugs in this application.
+Please report problems to Yanick Champoux (yanick@cpan.org)
+Patches are welcome.
+
+=head1 AUTHOR
+
+Yanick Champoux (yanick@cpan.org)
+
+=head1 LICENCE AND COPYRIGHT
+
+Copyright (c) 2006 Yanick Champoux (yanick@cpan.org). All rights reserved.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See perldoc perlartistic.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+=cut
+
