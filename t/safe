@@ -1,0 +1,89 @@
+use Safe;
+
+$\ = "\n";
+
+print join ":", execute( '$_=6' );
+
+my $safe2 = new Safe 'Container';
+
+print $safe2->reval( '$_=9' );
+print $safe2->reval( '$_' );
+
+sub execute
+{
+	local @_ = @_;
+	local $_ = $_[0];
+	   
+	# run this in a safe
+	my $safe = new Safe 'Container';
+	$safe->permit( qw/ rand time sort :browse :default / );
+	my $result;
+	my $error;
+  
+	eval 
+	{
+		undef $@;
+		my $code = $_[0];
+		@Container::Array = @_;
+		$result = $safe->reval( <<EOT );
+local *_ = \@Array;
+#*_ = *Array;
+\$_ = \$_[0];
+$code
+EOT
+	
+  	};
+
+	if( $error )
+	{
+		return( $result, $error );
+	}
+	else
+	{
+		my @array = $safe->reval( '@Array' );
+		$array[0] = $safe->reval( '$_' );
+		return( $result, $error, @array );
+	}
+}
+
+__END__
+sub execute
+{
+	local @_ = @_;
+	local $_ = $_[0];
+	   
+	# run this in a safe
+	my $safe = new Safe 'Container';
+	$safe->permit( qw/ rand time sort :browse :default / );
+	my $result;
+	my $error;
+  
+	eval 
+	{
+    	local $SIG{ALRM} = sub { die "timed out\n" };
+    	alarm 3;
+		undef $@;
+		my $code = $_[0];
+		@Container::Array = @_;
+		$result = $safe->reval( <<EOT );
+local *_ = *Array;
+#*_ = *Array;
+\$_ = \$_[0];
+$code
+EOT
+	
+    	$error = $@;   
+    	alarm 0;
+  	};
+
+	if( $error )
+	{
+		return( $result, $error );
+	}
+	else
+	{
+		my @array = $safe->reval( '@Array' );
+		$array[0] = $safe->reval( '$_' );
+		return( $result, $error, @array );
+	}
+}
