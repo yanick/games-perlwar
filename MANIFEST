@@ -4,12 +4,14 @@ Changes
 scripts/pwcreate
 scripts/pwround
 scripts/pwupload
+script/perlwar
 t/01general.t
 t/configuration.xml
 t/round_current.xml
 t/pod.t
 lib/Games/PerlWar.pm
 lib/Games/PerlWar/Rules.pod
+lib/Games/PerlWar/Shell.pm
 lib/Games/PerlWar/web/htaccess
 lib/Games/PerlWar/web/logo.png
 lib/Games/PerlWar/web/logo.svg

@@ -16,7 +16,8 @@ Module::Build->new(
     },
     script_files => [ qw# scripts/pwcreate 
                           scripts/pwround 
-                          scripts/pwupload # ],
+                          scripts/pwupload 
+                          scripts/perlwar   # ],
     add_to_cleanup      => [ ],
     create_makefile_pl  => 'traditional',
     sign            => 1,

@@ -8,7 +8,10 @@ use utf8;
 
 use Safe;
 use XML::Simple;
+use XML::Writer;
+use IO::File;
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 sub new {
     my( $class, $dir ) = @_;
@@ -17,13 +20,17 @@ sub new {
     bless $self, $class;
 }
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 sub clear_log {
 	my $self = shift;
 	$self->{log} = ();
 }
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 sub load {
-	my $self = shift;
+    my ( $self, $iteration ) = @_;
 	
 	print "loading configuration.. ";
 
@@ -31,16 +38,26 @@ sub load {
 	my %players;
 	for( @{$self->{conf}{player}} )
 	{
-		$players{ $_->{content} } = 
-			{ password => $_->{password},
-				color => $_->{color},
-				status => $_->{status} };
+		$players{ $_->{content} } = { 
+                password => $_->{password},
+				color => $_->{color}, 
+        };
 	}
 	$self->{conf}{player} = \%players;
 
-	my $xml = XML::LibXML->new->parse_file( 'round_current.xml' );
+    my $xml;
+    my $filename;
+    if ( defined $iteration ) {
+        $filename = sprintf( "round_%05d.xml", $iteration );
+        -e $filename or die "couldn't load round $iteration\n";
+    } 
+    else {
+        $filename = 'round_current.xml';
+    }
+    $xml = XML::LibXML->new->parse_file( $filename );
 
 	$self->{round} = $xml->findvalue( '/round/@number' ) || 0;
+    $self->{round}++ unless defined $iteration;
 	print "this is round $self->{round}\n";
 	my @theArray;
 	$self->{theArray} = \@theArray;
@@ -56,29 +73,96 @@ sub load {
 			$theArray[ $slot ] = { owner => $owner, code => $code };
 		}
 	}
+
+    if ( defined $iteration ) {
+        my @newcomers;
+        for my $n ( $xml->findnodes( '/newcomer' ) ) {
+            push @newcomers, { map { $n->findvalue( $_ ) } 
+                                    '@player', '@time', 'text()' };
+        }
+        $self->{newcomers} = \@newcomers;
+        $self->{old_iteration} = 1;
+    }
+
+    my @players = keys %{ $self->{conf}{player} };
+    my $actives;
+    $self->agent_census;
+    # everyone's active on round 1
+    if ( $self->{round} == 1 ) {
+        $self->{conf}{player}{$_}{status} = 'OK' for @players;
+        $actives = 99;
+    } 
+    else {
+        for( @players) {
+            $self->{conf}{player}{$_}{status} = $self->{conf}{player}{$_}{agents} 
+                                              ? 'OK' 
+                                              : 'EOT'
+                                              ;
+            $actives++ if $self->{conf}{player}{$_}{agents};
+        } 
+    }
+
+    $self->set_game_status( 
+        # game is over if we're out of time or there's only one man standing
+        ( $actives < 2 ) || ( $self->{round} > $self->{conf}{gameLength} )
+            ? 'over'
+            : ''
+    );
+}   
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+sub visit_mobil_station {
+    my $self = shift;
+
+    $self->{newcomers} = [];
+        
+    opendir my $dir, 'mobil' or die "couldn't open dir mobil: $!\n";
+    my @files = sort { -M $b <=> -M $a } grep { exists $self->{conf}{player}{$_} } readdir $dir;
+    closedir $dir;
+
+    for my $player ( @files ) {
+        my $date = localtime( $^T - (-M $player)*24*60*60 );
+		
+        my $fh;
+        my $code;
+        {
+            undef $/;
+            open $fh, 'mobil/'.$player or die;
+            $code = <$fh>;
+            close $fh;
+        }
+        unlink 'mobil/'.$player or $self->log( "ERROR: $!" );
+    
+        push @{$self->{newcomers}}, [ $player, $date, $code  ];
+    }
 }
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+sub get_game_status {
+    return $_[0]->{conf}{gameStatus};
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+sub set_game_status {
+    return $_[0]->{conf}{gameStatus} = $_[1];
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 sub play_round
 {
 	my $self = shift;
 	
-	# $self->load;
-
 	# check if the game is over (because a player won)
-	if( $self->{conf}{gameStatus} eq 'over' )
+	if( $self->get_game_status eq 'over' )
 	{
 		print "game is already over, exiting\n";
-		return
-	}
-
-	# check if the game is over (because round > game length)
-	$self->{round}++;
-	$self->{conf}{currentIteration} = $self->{round};
-	if( $self->{round} > $self->{conf}{gameLength} )
-	{
-		print "number of rounds limit reached, game is over\n";
 		return;
 	}
+
 
 	$self->{log} = [];
 	$self->log( localtime() . " : running round ".$self->{round} );
@@ -92,10 +176,7 @@ sub play_round
 	
 	# run each slot
 	$self->log( "running the Array.." );
-	for( 0..$self->{conf}{theArraySize}-1 )
-	{
-		$self->runSlot( $_ );
-	}
+    $self->runSlot( $_ ) for 0..$self->{conf}{theArraySize}-1;
 
 	# sanity check, make sure cells without agents are without owner
 	for( 0..$self->{conf}{theArraySize}-1 )
@@ -106,14 +187,51 @@ sub play_round
 			$self->{theArray}[ $_ ] = undef;
 		}
 	}
-	
+
+    # end of round checks
+    #
+    delete $_->{freshly_copied} for @{$self->{theArray}};
+
 	# check for victory
-	
-	# if victory, change the config
-	
-	# save the round
-	#$self->save;
+    my @Array = @{ $self->{theArray} };
+    my %survivor;
+
+    $self->agent_census;
+
+    my @survivors;
+    for my $p ( keys %{$self->{conf}{player}} ) {
+        if ( $self->{conf}{player}{$p}{agents} ) {
+            push @survivors, $p;
+        }
+        else {
+            $self->{conf}{player}{status} = 'EOT';
+        }
+    }
+
+    if ( @survivors > 1 ) {
+        print scalar( @survivors ), 
+            " players still have agents on the field\n";
+    } else {
+        print @survivors ? "only $survivors[0] left!\n"
+                        : "no survivor!\n";
+        # TODO update the config w/ victory
+        $self->set_game_status( 'over' );
+    }
+
+	# check if the game is over (because round > game length)
+	$self->{round}++;
+	$self->{conf}{currentIteration} = $self->{round};
+	if( $self->{round} > $self->{conf}{gameLength} ) {
+		print "number of rounds limit reached, game is over\n";
+        $self->set_game_status( 'over' );
+	}
+
+    $self->save;
+    delete $self->{newcomers};
+    delete $self->{old_iteration};
 }
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 sub save
 {
@@ -125,8 +243,6 @@ sub save
 	
 	#XMLout( $self->{conf}, OutputFile => "configuration.xml", RootName => 'configuration' );
 	
-	use XML::Writer;
-	use IO::File;
 
 	my $output = new IO::File(">round_current.xml");
 	my $writer = new XML::Writer(OUTPUT => $output);
@@ -245,74 +361,52 @@ sub introduce_newcomers
 {
 	no warnings 'uninitialized';
 	my $self = shift;
-	
-	chdir 'mobil';
-	my $dir;
-	opendir $dir, '.' or die "couldn't open dir mobil: $!\n";
-	
-	my @files = sort { -M $b <=> -M $a } grep { exists $self->{conf}{player}{$_} } readdir $dir;
-	closedir $dir;
-	
-	$self->log( "\tno-one was aboard" ) if not @files;
 
-	AGENT: for my $player ( @files )
-	{
-		my $date = localtime( $^T - (-M $player)*24*60*60 );
-		$self->log( "\t".$player."'s new agent is aboard (u/l'ed $date)" );
-		
-		my $fh;
-		my $code;
-		{
-			undef $/;
-			open $fh, $player or die;
-			$code = <$fh>;
-			close $fh;
-		}
-		
-		push @{$self->{newcomers}}, [ $player, $date, $code  ];
-		
-		# dead players can't submit agents
-		if( $self->{conf}{player}{$player}{status} eq 'EOT' )
-		{
-			$self->log( "\tplayer is eliminated, can't submit a new agent" );
-			unlink $player or $self->log( "ERROR: $!" );
-			next AGENT;
-		}
-		
-		my @available_slots;
-		for( 0..$self->{conf}{theArraySize}-1 )
-		{
-			push @available_slots, $_ unless $self->{theArray}[$_];
-		}
-		
-		if( @available_slots > 0 )
-		{
-			my $slot = $available_slots[ rand @available_slots ];
-			$self->log( "\tagent inserted at cell $slot" );
-			$self->{theArray}[$slot] = { owner => $player, code => $code };
-			unlink $player or $self->log( "ERROR: $!" );
-			next AGENT;
-		}
-		
-		for( 0..$self->{conf}{theArraySize}-1 )
-		{
-			push @available_slots, $_ if $self->{theArray}[$_]{owner} eq $player;
-		}
-		
-		if( @available_slots > 0 )
-		{
-			my $slot = $available_slots[ rand @available_slots ];
-			$self->log( "agent at cell $slot is upgraded" );
-			$self->{theArray}[$slot] = { owner => $player, code => $code };
-			unlink $player or $self->log( "ERROR: $!" );
-			next AGENT;
-		}
-		
-		$self->log( "no empty slot left, agent deleted" ); 
-		unlink $player or $self->log( "ERROR: $!" );
-	}
-	
-	chdir '..';
+    $self->visit_mobil_station unless $self->{old_iteration};
+
+    my @newcomers = @{$self->{newcomers}};
+
+    $self->log( "\tno-one was aboard" ) unless @newcomers;
+
+    AGENT: for my $newcomer ( @newcomers ) {
+        my( $player, $date, $code ) = @$newcomer;
+        $self->log( "\t".$player."'s new agent is aboard (u/l'ed $date)" );
+        # dead players can't submit agents
+        if( $self->{conf}{player}{$player}{status} eq 'EOT' ) {
+            $self->log( "\tplayer is eliminated, can't submit a new agent" );
+            next AGENT;
+        }
+    
+        my @available_slots;
+        for( 0..$self->{conf}{theArraySize}-1 )
+        {
+            push @available_slots, $_ unless $self->{theArray}[$_];
+        }
+    
+        if( @available_slots > 0 )
+        {
+            my $slot = $available_slots[ rand @available_slots ];
+            $self->log( "\tagent inserted at cell $slot" );
+            $self->{theArray}[$slot] = { owner => $player, code => $code };
+            next AGENT;
+        }
+    
+        for( 0..$self->{conf}{theArraySize}-1 )
+        {
+            push @available_slots, $_ if $self->{theArray}[$_]{owner} eq $player;
+        }
+    
+        if( @available_slots > 0 )
+        {
+            my $slot = $available_slots[ rand @available_slots ];
+            $self->log( "agent at cell $slot is upgraded" );
+            $self->{theArray}[$slot] = { owner => $player, code => $code };
+            unlink $player or $self->log( "ERROR: $!" );
+            next AGENT;
+        }
+    
+        $self->log( "no empty slot left, agent deleted" ); 
+    }
 }
 
 ##########################################################################
@@ -323,8 +417,7 @@ sub log
   
   return @{$self->{log}} unless @_;
 
-  if( $self->{interactive} ) 
-  {
+  if( $self->{interactive} ) {
     local $\ = "\n";
     print for @_;
   }
@@ -499,6 +592,19 @@ sub _alter_operation {
 
     $self->{theArray}[$abs_target_index]{code} = $Array_ref->[$target_index];
     $self->log( "\tcode of agent in cell $abs_target_index altered" );
+}
+
+sub agent_census {
+    my( $self ) = @_;
+
+    my %player = %{$self->{conf}{player}};
+    my @theArray = @{$self->{theArray}};
+
+    $player{$_}{agents} = 0 for keys %player;
+
+    for my $cell ( @theArray ) {
+        $player{$cell->{owner}}{agents}++ if $cell->{owner};
+    }
 }
 
 sub _copy_operation {

@@ -1,0 +1,7 @@
+element player {
+   text 
+   attribute password { text }
+   attribute color    { text }
+   # EOT means that the player has lost
+   attribute status   { "EOT" | "OK" }
+}
