@@ -126,22 +126,6 @@ sub do_create {
     mkdir "history" or die "couldn't create directory history:$!\n";
     mkdir 'mobil' or die "couldn't create directory mobil:$!\n";
 
-    my ( $location ) = grep -d "$_/Games/PerlWar/web", @INC 
-        or die "no installation of PerlWar found\n";
-
-    $location = "$location/Games/PerlWar/web";
-
-    copy( "$location/htaccess", ".htaccess" ) 
-        or die "coudn't copy .htaccess: $!\n";
-
-    for( qw/ submit.epl perlwar.ico upload.epl upload.html/ ) {
-    	copy( "$location/$_", $_ ) or die "coudn't copy $_: $!\n";
-    }
-
-    for( qw/ include_config.xps  iteration2html.xps configuration.xps/ ) {
-    	copy( "$location/stylesheets/$_", $_ ) or die "coudn't copy $_: $!\n";	
-    }
-
     print "\n\ngame configuration\n";
     my %conf;
 
