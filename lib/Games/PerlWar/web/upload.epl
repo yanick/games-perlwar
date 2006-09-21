@@ -15,6 +15,7 @@
 <head><TITLE></TITLE></head>
 <body>
 [$ if $player->{password} ne $fdat{password} $]
+[- $req_rec->status( 401 ); -]
 <p>player not recognized or password not valid</p>
 [$ else $]
 [-
