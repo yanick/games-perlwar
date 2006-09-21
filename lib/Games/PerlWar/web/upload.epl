@@ -1,15 +1,15 @@
 [! use XML::Simple; !]
+[- $path = $epreq->component->cwd  -]
+[- chdir $path or die -]
 [-
-	open CONF, "configuration.xml";
-	local $/;
-        undef $/;
+	open CONF, "configuration.xml" or die $!;
+	local $/ = undef;
 
 	$conf = XMLin( <CONF> );
 	close CONF;
 
 	( $player ) = grep $_->{content} eq $fdat{player}, @{$conf->{player}};
 -]
-
 
 <html>
 <head><TITLE></TITLE></head>
@@ -22,7 +22,9 @@ my $existed;
 
 $existed = 1 if -e "mobil/$fdat{player}";
 
-open my $fagent, ">mobil/$fdat{player}\n";
+my $fagent;
+open $fagent, '>', "mobil/$fdat{player}" or die $!;
+
 print $fagent $fdat{agent};
 close $fagent;
 -]
