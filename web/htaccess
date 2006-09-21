@@ -1,0 +1,15 @@
+AxNoCache On
+DirectoryIndex round_current.xml
+
+<FilesMatch "round*">
+<AxStyleName "#default">
+   AxAddProcessor application/x-ypathscript include_config.xps
+   AxAddProcessor application/x-ypathscript iteration2html.xps
+</AxStyleName>
+</FilesMatch>
+
+<Files "configuration.xml">
+<AxStyleName "#default">
+   AxAddProcessor application/x-ypathscript configuration.xps
+</AxStyleName>
+</Files>
