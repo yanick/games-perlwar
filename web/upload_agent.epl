@@ -1,0 +1,33 @@
+[! use XML::Simple; !]
+[-
+	$conf = XMLin( 'configuration.xml' );
+-]
+
+
+<html>
+<head><TITLE></TITLE></head>
+<body>
+[$ if $conf->{player}{$fdat{player}}{password} ne $fdat{password} $]
+<p>player not recognized or password not valid</p>
+[$ else $]
+[-
+my $existed;
+
+$existed = 1 if -e "mobil/$fdat{player}";
+
+open my $fagent, ">mobil/$fdat{player}\n";
+print $fagent $fdat{agent};
+close $fagent;
+-]
+[$ if -e "mobil/$fdat{player}" $]
+<p>agent uploaded</p>
+[$ if $existed $]
+<p>An agent was already present and has been... removed.</p>
+[$ endif $]
+[$ else $]
+<p>Agent couldn't be uploaded, looks like there is a problem. Please contact the Architect.</p>
+[$ endif $]
+
+[$ endif $]
+</body>
+</html>
