@@ -1,3 +1,5 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <%
 
 $t->{title}{showtag} = 0;
@@ -21,8 +23,8 @@ function showSlot( slotId )
 {
 	resetConsole();
 	var slot = document.getElementsByName( "slot" )[ slotId ];
-	slot.style['borderWidth'] = 3;
-	slot.style['margin'] = 0;
+	slot.style['borderWidth'] = '3px';
+	slot.style['margin'] = '0px';
 	document.getElementsByName( "slotCode" )[ slotId ].style['visibility'] = 'visible';
 	document.getElementsByName( "slotCode" )[ slotId ].style['display'] = 'block';
 }
@@ -37,10 +39,10 @@ function resetConsole()
 {
 	var slots = document.getElementsByName( "slot" );
 
-	for( i = 0; i < slots.length; i++ )
+	for( var i = 0; i < slots.length; i++ )
 	{
 		slots[i].style['borderWidth'] = 0;
-		slots[i].style['margin'] = 3;
+		slots[i].style['margin'] = '3px';
 	}
 
 	var codes = document.getElementsByName( "slotCode" );
@@ -128,7 +130,8 @@ div.entry { display: block }
 
 
 .summary, .gameLinks {
-    border : solid 1;
+    border-style : solid;
+    border-width: 1px;
     width: 200px;
     top: 100px;	
     background-color: #616460;
@@ -147,7 +150,8 @@ div.entry { display: block }
     top: 100px;
     left: 230px;
     width: 600px;
-    border: dotted 1;
+    border-style: dotted;
+    border-width: 1px;
   }
 
 
@@ -168,7 +172,7 @@ div.entry { display: block }
 </head>
 <body>
 
-<h1><img src="logo.png" alt="PerlWar" /> : <%= apply_templates( '/perlwar/configuration/title' ) %></h1>
+<h1><img src="/perlwar/logo.png" alt="PerlWar" /> : <%= apply_templates( '/perlwar/configuration/title' ) %></h1>
 
 <div class="rightSide">
 
@@ -301,8 +305,7 @@ for( 0..findvalue( '/perlwar/configuration/theArraySize/text()' ) -1 ) { %>
 
 </div>
 
+<!-- to force the browser to adjust the height of the window -->
+<script type="text/javascript"> showLog(); </script>
 </body>
 </html>
-<script type="text/javascript">
-    showLog();
-</script>
