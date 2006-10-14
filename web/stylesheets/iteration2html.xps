@@ -1,14 +1,22 @@
 <%
 
 $t->{title}{showtag} = 0;
+$t->set( 'log' => {
+    pre => '<div name="log" class="log">',
+    post => "</div>\n",
+} );
+$t->set( 'entry' => {
+    pre => '<div class="entry">',
+    post => '</div>',
+} );
 
 %>
 <html>
 <head>
 <TITLE>perlwar : <%= apply_templates( '/perlwar/configuration/title' ) %></TITLE>
-<LINK REL="icon" HREF="perlwar.ico" >
-<LINK REL="SHORTCUT ICON" HREF="perlwar.ico">
-<script>
+<LINK REL="icon" HREF="perlwar.ico" />
+<LINK REL="SHORTCUT ICON" HREF="perlwar.ico" />
+<script type="text/javascript">
 function showSlot( slotId )
 {
 	resetConsole();
@@ -53,7 +61,7 @@ function resolve_iteration ()
 }
 </script>
 
-<style>
+<style type="text/css">
 
 BODY { background-color: black; color: lightgreen; font-family: sans-serif;}
 
@@ -62,7 +70,7 @@ A:visited { text-decoration: overline; color: #00A713  }
 A:active { text-decoration: overline; color: maroon }
 
 
-entry { display: block }
+div.entry { display: block }
 
 .score {
     left : 95px;
@@ -158,14 +166,16 @@ entry { display: block }
 
 </style>
 </head>
-<div>
+<body>
 
-<h1>PerlWar : <%= apply_templates( '/perlwar/configuration/title' ) %></h1>
+<h1><img src="logo.png" alt="PerlWar" /> : <%= apply_templates( '/perlwar/configuration/title' ) %></h1>
 
 <div class="rightSide">
 
 <div class="summary">
-<div align="center">iteration <%= findvalue( '/perlwar/round/@number' ) || '0'  %></a></div>
+<div align="center">
+    iteration <%= findvalue( '/perlwar/round/@number' ) || '0'  %>
+</div>
 <br/>
 <%
 	my %players;
@@ -218,14 +228,18 @@ entry { display: block }
 <div class="gameLinks">
 <a href="configuration.xml">war configuration</a>
 <br/><br/>
-
-<a href="upload.html">u/l agent</a>
+<% 
+    use Cwd;
+    my $dir = (split '/' => getcwd )[-1];
+%>
+<a href="../upload.epl?game=<%= $dir %>">u/l agent</a>
 <br/><br/>
 <a href=".?passthru=1">raw xml</a>
 
 <br/><br/>
 
-<form name='history_form' onSubmit="resolve_iteration();return true;">
+<form name='history_form' onSubmit="resolve_iteration();return true;"
+    action='.' >
 <b>log</b><br/>
 <div style="margin-left: 10px">
 
@@ -234,7 +248,7 @@ iteration <SELECT name="history_select">
 	<option value='<%= sprintf 'round_%05d.xml', $_ %>'><%= $_ %></option> 
 <% } %>
 </SELECT>&nbsp;
-<INPUT type="submit" value="access" >
+<input type="submit" value="access" />
 </div>
 </form>
 <br/>
@@ -261,15 +275,34 @@ for( 0..findvalue( '/perlwar/configuration/theArraySize/text()' ) -1 ) { %>
 
 </div>
 <div style="clear: both;height:10px"></div>
-<INPUT type="submit" value="show log" onclick="showLog()">
+<input type="submit" value="show log" onclick="showLog()" />
 <div class="console">
-<div name='log' class='log'><%= apply_templates( '/perlwar/round/log' ) %></div>
-<% for( 0..findvalue( '/perlwar/configuration/theArraySize/text()' ) -1 ) { %>
-	<div name="slotCode" class="slotCode" id='<%= $_ %>'><%= findvalue( "/perlwar/round/theArray/slot[\@id = $_]/code/text()" ) %></div>	
-<% } %>
+
+<%= apply_templates( '/perlwar/round/log' ) %>
+<% 
+    $t->set( 'slot' => {
+        testcode => \&tc_slot,
+    } ); 
+
+    sub tc_slot {
+        my( $n, $t ) = @_;
+        my $id = $n->findvalue( '@id' );
+        my $code = $n->findvalue( 'code/text()' );
+        $t->set({ 
+            pre => "<div class='slotCode' name='slotCode' id='slot_$id'>$code</div>\n" });
+        return DO_SELF_ONLY;
+    }
+
+%>
+
+<%~ //slot %>
+
 </div>
 
 </div>
 
 </body>
 </html>
+<script type="text/javascript">
+    showLog();
+</script>
