@@ -63,6 +63,24 @@ sub clear {
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+sub run_cell {
+    my( $self, $cell_id, $vars_ref ) = @_;
+    my %vars;
+    %vars = %$vars_ref if $vars_ref;
+
+    my $cell = $self->get_cell( $cell_id );
+
+    return $cell->run({
+        %vars,
+        '@_' => [ $self->get_cells_code( $cell_id ) ],
+        '@o' => [ $self->get_facades( $cell_id ) ],
+        });
+   
+    
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 sub get_cell {
     my( $self, $position ) = @_;
     my $id = ident $self;
@@ -74,7 +92,7 @@ sub get_cell {
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-sub get_code_array {
+sub get_cells_code {
     my( $self, $base ) = @_;
     my $id = ident $self;
 
@@ -85,12 +103,12 @@ sub get_code_array {
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-sub get_apparent_owner_array {
+sub get_facades {
     my( $self, $base ) = @_;
     my $id = ident $self;
 
     my $last_index = $size_of{ $id } - 1;
-    return map { $_->get_apparent_owner } 
+    return map { $_->get_facade } 
                @{$cells_of{ $id }}[ $base..$last_index, 0..($base-1) ];
 }
 
@@ -154,5 +172,7 @@ sub save_as_xml {
     }
     $writer->endTag;
 }   
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1;

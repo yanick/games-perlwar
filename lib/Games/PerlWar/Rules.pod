@@ -61,15 +61,32 @@ Each cell of the Array is visited sequentially. If a cell contains an agent, it 
 
 =head3 Variables accessibles to the agents
 
+Variables which, if modified, affect the Array are marked by a (M).
+
 =over
 
-=item $_
+=item (M) $_  
 
-the code of the agent.
+the code of the agent. Changes brought to C<$_> are reflected in the Array
+(that is, once executed, the agent's code is updated to the new value of C<$_>).
 
 =item @_
 
 the whole Array, positioned relatively to the current agent. (i.e., $_[0] eq $_ )
+
+=item (M) $o (small oh)
+
+the agent's facade (that is, the player it pretends to own allegiance to).
+Modifications to this affect the Array.
+
+=item @o (small oh)
+
+Array holding the facade of all agents, positioned relatively to the current
+agent.
+
+=item $O  (big oh)
+
+The agent's true master.
 
 =item $S, $I, $i
 

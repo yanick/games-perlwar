@@ -6,12 +6,30 @@ use Carp;
 
 use Class::Std;
 
-use Safe;
+use Games::PerlWar::AgentEval;
 
 my %owner_of          : ATTR( :name<owner> :default<undef> );
-my %apparent_owner_of : ATTR( :set<apparent_owner> :init_args<apparent_owner> :default<undef>);
-my %code_of           : ATTR( :get<code> :init_args<code> :default<undef> );
+my %facade_of         : ATTR( :set<facade> :init_arg<facade> :default<undef>);
+my %code_of           : ATTR( :get<code> :init_arg<code> :default<undef> );
 my %operational_of    : ATTR( :name<operational> :default<1> );
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+sub run {
+    my ( $self, $vars ) = @_;
+    my %vars;
+    %vars = %$vars if $vars;
+
+    return Games::PerlWar::AgentEval->new({
+        code => $self->get_code,
+        vars => { 
+            %vars,
+            '$o' => $self->get_facade,
+            '$O' => $self->get_owner,
+        }
+    });
+
+}
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 sub set_code {
@@ -24,17 +42,19 @@ sub set_code {
 
     unless( $code ) {
         $self->set_owner( undef );
-        $self->set_apparent_owner( undef );
+        $self->set_facade( undef );
     }
+
+    return $self;
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-sub get_apparent_owner {
+sub get_facade {
     my $self = shift;
     my $id = ident $self;
 
-    return $apparent_owner_of{ $id } || $owner_of{ $id };
+    return $facade_of{ $id } || $owner_of{ $id };
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -45,7 +65,7 @@ sub set {
     my %args = %$ref_args;
 
     $self->set_owner( $args{owner} ) if $args{owner};
-    $self->set_apparent_owner( $args{apparent_owner} ) if $args{apparent_owner};
+    $self->set_facade( $args{apparent_owner} ) if $args{apparent_owner};
     $self->set_code( $args{code} ) if $args{code};
 }
 
@@ -72,7 +92,7 @@ sub insert {
     my $id = ident $self;
 
     $self->set_owner( $ref_args->{ owner } );
-    $self->set_apparent_owner( $ref_args->{ apparent_owner } );
+    $self->set_facade( $ref_args->{ apparent_owner } );
     $self->set_code( $ref_args->{ code } );
 }
 
@@ -81,7 +101,7 @@ sub copy {
     my $id = ident $self;
 
     $self->set_owner( $original->get_owner );
-    $self->set_apparent_owner( $original->get_apparent_owner );
+    $self->set_facade( $original->get_facade );
     $self->set_code( $original->get_code );
 }
 
@@ -90,7 +110,7 @@ sub save_as_xml {
     my $id = ident $self;
 
     $writer->dataElement( owner => $self->get_owner );
-    $writer->dataElement( facade => $self->get_apparent_owner );
+    $writer->dataElement( facade => $self->get_facade );
     $writer->dataElement( code => $self->get_code );
 }
 

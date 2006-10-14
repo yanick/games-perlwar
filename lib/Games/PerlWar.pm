@@ -12,6 +12,8 @@ use XML::Writer;
 use IO::File;
 
 use Games::PerlWar::Array;
+use Games::PerlWar::Cell;
+use Games::PerlWar::AgentEval;
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -411,6 +413,21 @@ sub insert_agent {
         code => $code,
     });
 }
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+sub run_cell {
+    my( $self, $cell_id, $vars_ref ) = @_;
+    my %vars;
+    %vars = %$vars_ref if $vars_ref;
+
+    return $self->array->run_cell( $cell_id => {  
+       %vars,
+       '$S' => $self->{conf}{snippetMaxLength},
+       '$I' => $self->{conf}{gameLength},
+       '$i' => $self->{conf}{currentIteration},
+    } );
+
+}
 
 ##########################################################################
 
@@ -427,9 +444,9 @@ sub execute
 
     my $owner =  $self->array->cell( $cell_id )->get_owner;
     
-	local @_ = $self->array->get_code_array( $cell_id );
+	local @_ = $self->array->get_cells_code( $cell_id );
 	local $_ = $_[0];
-	my @o = $self->array->get_apparent_owner_array( $cell_id );
+	my @o = $self->array->get_facades( $cell_id );
 
 	# run this in a safe
 	my $safe = new Safe 'Container';
@@ -483,8 +500,8 @@ sub runSlot {
 	
 	$self->log( "cell $slotId: agent owned by ".$cell->get_owner ); 
 
-    my @code_array  = $self->{theArray}->get_code_array( $slotId );
-    my @owner_array = $self->{theArray}->get_apparent_owner_array( $slotId );
+    my @code_array  = $self->{theArray}->get_cells_code( $slotId );
+    my @owner_array = $self->{theArray}->get_facades( $slotId );
 
 	# exceed permited size?
     my $code = $cell->get_code;
@@ -496,20 +513,22 @@ sub runSlot {
 
   	$self->log( "\texecuting.." );
   	
-  	my( $result, $error, $facade, @Array );
     # TODO  squeeze in the ownership array
-  	( $result, $error, $facade, @Array ) = $self->execute( $slotId );
+    my $agent = $self->run_cell( $slotId );
 
-	if( $error ) {
-    	$self->log( "\tagent crashed: $error" );
+	if( $agent->crashed ) {
+    	$self->log( "\tagent crashed: ".$agent->error_msg );
         $cell->delete;
     	return;
   	} 
 
-    $cell->set_code( $Array[0] );
-    $cell->set_apparent_owner( $facade );
+    $cell->set_code( $agent->eval( '$_' ) );
+    $cell->set_facade( $agent->eval( '$o' ) );
 
-  	my $output = $result;
+    no warnings qw/ uninitialized /; 
+
+  	my $output = $agent->return_value;
+    my $result = $output;
   	$output = substr( $output, 0, 24 ).".." if length $output > 25;
   	$output =~ s#\n#\\n#g;
   	
@@ -522,7 +541,7 @@ sub runSlot {
         $self->_p0wn_operation( $slotId, $1 );
     }
     elsif( $result =~ /^~(-?\d*)$/ ) {
-        $self->_alter_operation( $slotId, $1, \@Array );
+        $self->_alter_operation( $slotId, $1, [ $agent->eval( '@Array' ) ] );
     }
     elsif( $result =~ /^(-?\d*):(-?\d*)$/ ) {
         $self->_copy_operation( $slotId, $1, $2 );

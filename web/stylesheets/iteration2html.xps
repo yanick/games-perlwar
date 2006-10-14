@@ -136,7 +136,19 @@ for( 0..findvalue( '/perlwar/configuration/theArraySize/text()' ) -1 ) { %>
 <div name='slot' 
 	class="slot" 
 	style='background-color: <%= $players{ findvalue( "/perlwar/round/theArray/slot[\@id = $_]/owner/text()" ) }{color} %>'  
-	onclick="showSlot(<%= $_ %>)"><%=  sprintf "%0${fill}d", $_ %></div>
+	onclick="showSlot(<%= $_ %>)">
+<% 
+    my $owner = findvalue( "/perlwar/round/theArray/slot[\@id = $_]/owner/text()" );
+    my $facade = findvalue( "/perlwar/round/theArray/slot[\@id = $_]/facade/text()" );
+    $facade_color = $players{ $facade }{ color };
+    $has_facade = $facade and $facade ne $owner;
+%>    
+    <%# $owner.":".$facade.":".$has_facade.":".$facade_color %>
+    <%= "<span style='background-color: $facade_color'>" x !!$has_facade  %>
+    <%=  sprintf "%0${fill}d", $_ %>
+    <%= '</span>' x !!$has_facade  %>
+    
+</div>
 <% } %>
 
 </div>
@@ -155,7 +167,7 @@ for( 0..findvalue( '/perlwar/configuration/theArraySize/text()' ) -1 ) { %>
         my $id = $n->findvalue( '@id' );
         my $code = $n->findvalue( 'code/text()' );
         $t->set({ 
-            pre => "<div class='slotCode' name='slotCode' id='slot_$id'>$code</div>\n" });
+            pre => "<div class='slotCode' name='slotCode' id='code_$id'>$code</div>\n" });
         return DO_SELF_ONLY;
     }
 

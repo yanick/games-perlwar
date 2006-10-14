@@ -1,11 +1,13 @@
+- can only use an existing player as a facade
+- use variable $o to set facade
+- add logs to say that an agent change facade
+- Note is a REF?
+- Don't discard a player if he doesn't have agents at the end of the turn
 - trunk the output of an agent to 10 characters
 - Produce DTD
 - Cell id in hexadecimal (heh heh heh)
 - Single CSS file for everyone
 - in configuration.xps, check if open-ended
-- Make logo for ____ THE ARRAY ----
 - For empty cells, show 'empty'
-- Give the possibility to d/l the raw xml
-- Prevent people to access the mobil directory
-- Change Makefile.PL to Build.PL
-
+- Ownership array
+- Free admission games (no need to register beforehand)

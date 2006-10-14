@@ -4,8 +4,9 @@ function showSlot( slotId )
 	var slot = document.getElementsByName( "slot" )[ slotId ];
 	slot.style['borderWidth'] = '3px';
 	slot.style['margin'] = '0px';
-	document.getElementsByName( "slotCode" )[ slotId ].style['visibility'] = 'visible';
-	document.getElementsByName( "slotCode" )[ slotId ].style['display'] = 'block';
+    var code = document.getElementById( "code_"+ slotId );
+    code.style['visibility'] = 'visible';
+	code.style['display'] = 'block';
 }
 function showLog()
 {

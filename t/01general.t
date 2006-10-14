@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 24;
+use Test::More tests => 25;
 
 use Games::PerlWar;
 
@@ -13,63 +13,53 @@ ok(1);  # game loaded
 
 my( $result, $error, @Array );
 
-$pw->array->cell(0)->set({ code => '"hello world!"' });
-( $result, $error, @Array ) = $pw->execute( 0 );
+use Games::PerlWar::Cell;
+my $cell = Games::PerlWar::Cell->new;
 
-is $result => "hello world!", 'cell execution';
+$cell->set_code( '"hello world!"' );
 
+is $cell->run->return_value => "hello world!", 'cell execution';
 
-$pw->array->cell(1)->set({ code => 'die' });
-( $result, $error, @Array ) = $pw->execute( 1 );
-isnt $error => '',  'agent doing a hara-kiri';
+$cell->set_code( 'die' );
+ok $cell->run->crashed => 'agent doing a hara-kiri';
 
-$pw->array->cell(2)->set({ code => '6/0' });
-( $result, $error, @Array ) = $pw->execute( 2 );
-isnt $error => '', "agent's code segfault'ing";
+ok $cell->set_code( '6/0' )->run->crashed => "agent's code segfault'ing";
 
-$pw->array->cell(3)->set_code('system "ls"');
-( $result, $error, @Array ) = $pw->execute( 3 );
-isnt $error => '', "agent trying to be naughty";
+ok $cell->set_code( 'system "ls"' )->run->crashed 
+    => "agent trying to be naughty";
 
-$pw->array->cell(4)->set_code('q while 1');
-( $result, $error, @Array ) = $pw->execute( 4 );
-isnt $error => '', 'agent running forever';
+ok $cell->set_code( '1 while 1' )->run->crashed 
+    => 'agent running forever';
 
+is $cell->set_code( '$_' )->run->return_value => '$_',
+    'access to $_';
+
+# access to @_
 $pw->array->cell(5)->set_code('scalar @_');
-( $result, $error, @Array ) = $pw->execute( 5 );
-is $result => 97, 'Array size';
-
-# access to $_
-$pw->array->cell(6)->set_code('$_');
-$pw->array->cell(7)->set_code('middle cell');
-$pw->array->cell(8)->set_code('$_[-1]');
-( $result, $error, @Array ) = $pw->execute( 6 );
-is $result => '$_', 'access to $_';
-( $result, $error, @Array ) = $pw->execute( 8 );
-is $result => 'middle cell', 'access to other cells';
+$pw->array->cell(6)->set_code('$_[-1]');
+is $pw->run_cell(5)->return_value => 97, 'Array size';
+is $pw->run_cell(6)->return_value => 'scalar @_', 'access other cells';
 
 # access to @_
 $pw->array->clear;
 $pw->array->cell(0)->set_code('join ":",@_');
 $pw->array->cell($_)->set_code($_) for 1..20;
-( $result, $error, @Array ) = $pw->execute( 0 );
 
-is $result => 'join ":",@_:1:2:3:4:5:6:7:8:9:10:11:12:13:14:15:16:17:18:19:20::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::', 'access to @_';
+is $pw->run_cell( 0 )->return_value => 'join ":",@_:1:2:3:4:5:6:7:8:9:10:11:12:13:14:15:16:17:18:19:20::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::', 'access to @_';
 
 $pw->array->cell(0)->set_code('join ":",@o');
 $pw->array->cell(0)->set_owner('neo');
-( $result, $error, @Array ) = $pw->execute( 0 );
-is $result => 'neo::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::', 'access to @o';
+is $pw->run_cell( 0 )->return_value => 'neo::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::', 'access to @o';
 
-$pw->array->cell(0)->set_code('@x = map undef, 0..5; join ":",@x');
-( $result, $error, @Array ) = $pw->execute( 0 );
-is $result => ':::::', 'code with undef values';
+
+is $cell->set_code( '@x = map undef, 0..5; join ":",@x' )
+        ->run
+        ->return_value => ':::::', 'code with undef values';
 
 # variables accessibles from a cell
 # $S, $I, $i
 $pw->array->cell(9)->set_code('"$S:$I:$i"');
-( $result, $error, @Array ) = $pw->execute( 9 );
-is $result => '67:97:13', '$S, $I, $i';
+is $pw->run_cell(9)->return_value => '67:97:13', '$S, $I, $i';
 
 # And now, operations
 
@@ -100,21 +90,27 @@ is $array->cell(0)->get_owner => 'luigi', "parents shouldn't be 0wned";
 is $array->cell($_)->get_owner => 'mario', "0wning" for 1..2;
 
 # self-modification
-$array->cell(0)->set_code( '$_="tadam"' );
-
-my $owner;
-( $result, $error, $owner, @Array ) = $pw->execute( 0 );
-is $Array[0] => 'tadam', "self-modification";
+$cell->set_code( '$_="tadam"' );
+is $cell->run->eval( '$_' ) => 'tadam', "self-modification";
 
 # ownership
 $pw->array->clear;
-$array->cell(0)->set( { owner => 'neo', code => '$o[0]="morpheus"' } );
-$array->cell(1)->set( { owner => 'smith', code => '$_[1]="neo"' } );
+$array->cell(0)->set( { owner => 'neo', code => '$o="morpheus"' } );
+$array->cell(1)->set( { owner => 'smith', code => '$o[1]="neo"' } );
 $array->cell(2)->set( { owner => 'smith', code => '1' } );
 
 $pw->runSlot(0);
-is $array->cell(0)->get_apparent_owner => 'morpheus', 
+is $array->cell(0)->get_facade => 'morpheus', 
     'agent can change its own facade';
 $pw->runSlot(1);
-is $array->cell(2)->get_apparent_owner => 'smith', 
-    '..but not the facade of another agent';
+is $array->cell(2)->get_facade => 'smith', 
+    'but not the facade of another agent';
+
+$pw->array->clear;
+$array->cell(0)->set( { owner => 'neo', code => '$x="pass it on"' } );
+$array->cell(1)->set( { owner => 'neo', code => '$_=$x' } );
+$pw->runSlot($_) for 0..1;
+
+is $array->cell(1)->get_code => '',
+    "agents can't pass information back and forth";
+

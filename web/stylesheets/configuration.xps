@@ -5,8 +5,8 @@ $t->{title}{showtag} = 0;
 <html>
 <head>
 <TITLE>perlwar : <%= findvalue( '/configuration/title/text()' ) %></TITLE>
-<LINK REL="icon" HREF="perlwar.ico" >
-<LINK REL="SHORTCUT ICON" HREF="perlwar.ico">
+<LINK REL="icon" HREF="perlwar.ico" />
+<LINK REL="SHORTCUT ICON" HREF="perlwar.ico" />
 <style>
 BODY { background-color: black; color: lightgreen; font-family: sans-serif;}
 
@@ -24,6 +24,7 @@ dt { font-weight: bold; }
 
 <% use Games::PerlWar; %>
 <p>using Perlwar version <%= $Games::PerlWar::VERSION %>
+</p>
 
 <h2>settings</h2>
 
