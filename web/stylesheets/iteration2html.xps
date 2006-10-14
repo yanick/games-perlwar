@@ -15,163 +15,17 @@ $t->set( 'entry' => {
 %>
 <html>
 <head>
-<TITLE>perlwar : <%= apply_templates( '/perlwar/configuration/title' ) %></TITLE>
-<LINK REL="icon" HREF="perlwar.ico" />
-<LINK REL="SHORTCUT ICON" HREF="perlwar.ico" />
-<script type="text/javascript">
-function showSlot( slotId )
-{
-	resetConsole();
-	var slot = document.getElementsByName( "slot" )[ slotId ];
-	slot.style['borderWidth'] = '3px';
-	slot.style['margin'] = '0px';
-	document.getElementsByName( "slotCode" )[ slotId ].style['visibility'] = 'visible';
-	document.getElementsByName( "slotCode" )[ slotId ].style['display'] = 'block';
-}
-function showLog()
-{
-	resetConsole();
-	document.getElementsByName( "log" )[ 0 ].style['visibility'] = 'visible';
-	document.getElementsByName( "log" )[ 0 ].style['display'] = 'block';
-}
+<title>
+    perlwar - <%~ /perlwar/configuration/title %>
+</title>
 
-function resetConsole()
-{
-	var slots = document.getElementsByName( "slot" );
-
-	for( var i = 0; i < slots.length; i++ )
-	{
-		slots[i].style['borderWidth'] = 0;
-		slots[i].style['margin'] = '3px';
-	}
-
-	var codes = document.getElementsByName( "slotCode" );
-
-	for( i = 0; i < codes.length; i++ )
-	{
-		codes[i].style['visibility'] = 'hidden';
-		codes[i].style['display'] = 'none';
-	}
-	document.getElementsByName( "log" )[0].style['display'] = 'none';
-	document.getElementsByName( "log" )[0].style['visibility'] = 'hidden';
-
-}
-
-function resolve_iteration ()
-{
-	document.forms[0].action = document.forms[0].elements[0].options[ document.forms[0].elements[0].selectedIndex ].value;	
-}
+<link REL="icon" HREF="perlwar.ico" />
+<link REL="SHORTCUT ICON" HREF="perlwar.ico" />
+<script type="text/javascript" src="/perlwar/perlwar.js" >
 </script>
 
-<style type="text/css">
+<link rel="stylesheet" type="text/css" href="/perlwar/perlwar.css" />
 
-BODY { background-color: black; color: lightgreen; font-family: sans-serif;}
-
-A:link { text-decoration: overline; color: #00A713  }
-A:visited { text-decoration: overline; color: #00A713  }
-A:active { text-decoration: overline; color: maroon }
-
-
-div.entry { display: block }
-
-.score {
-    left : 95px;
-    position : absolute;
-  }
-
-
-.slotCode, .log {
-    overflow : scroll;
-    visibility : hidden;
-    white-space : pre;
-    height : 300px;
-  }
-
-
-.log {
-    visibility: visible;
-  }
-
-
-.slot {
-    cursor: crosshair;
-    background : #3972b0;
-    font : 8pt sans-serif;
-    padding : 3px;
-    margin : 3px;
-    float : left;
-    height : 12px;
-    overflow : hidden;
-    position : static;
-    vertical-align : middle;
-    text-align: center;
-    white-space : pre;
-    width : 30px;
-    z-index : 0;
-    border : yellow ridge;
-    border-width: 0px;
-    color: black;
-  }
-
-
-.activeSlot {
-    background : #3972b0;
-    font : 10pt serif;
-    padding : 3px;
-    margin : 3px;
-    float : left;
-    height : 150px;
-    overflow : scroll;
-    position : static;
-    white-space : pre;
-    width : 150px;
-    z-index: 1;
-  }
-
-
-.summary, .gameLinks {
-    border-style : solid;
-    border-width: 1px;
-    width: 200px;
-    top: 100px;	
-    background-color: #616460;
-	margin: 5px;
-	padding: 5px;
-  }
-
-
-.deadPlayer {
-    text-decoration : line-through;
-  }
-
-
-.leftSide {
-    position: absolute;
-    top: 100px;
-    left: 230px;
-    width: 600px;
-    border-style: dotted;
-    border-width: 1px;
-  }
-
-
-.theArray {
-  }
-
-
-.console {
-    background-color : #616460;
-    border-style : dotted;
-    clear : both;
-    color : #90ee90;
-    height : 300px;
-    margin-top: 15px;
-  }
-
-h1 { float: right; margin-top: 0px; margin-right: 100px;}
-
-
-</style>
 </head>
 <body>
 
