@@ -11,6 +11,8 @@ use XML::Simple;
 use XML::Writer;
 use IO::File;
 
+use Games::PerlWar::Array;
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 sub new {
@@ -59,20 +61,11 @@ sub load {
 	$self->{round} = $xml->findvalue( '/round/@number' ) || 0;
     $self->{round}++ unless defined $iteration;
 	print "this is round $self->{round}\n";
-	my @theArray;
-	$self->{theArray} = \@theArray;
-	for my $slot ( 0..$self->{conf}{theArraySize}-1 )
-	{
-		my $owner = $xml->findvalue( "//slot[\@id=$slot]/owner/text()" );
-		my $code = $xml->findvalue( "//slot[\@id=$slot]/code/text()" );
 
-		#print "$slot : $owner : $code\n";
-		if( $code )
-		{
-			utf8::decode( $code );
-			$theArray[ $slot ] = { owner => $owner, code => $code };
-		}
-	}
+	$self->{theArray} = Games::PerlWar::Array->new({ 
+                            size => $self->{conf}{theArraySize} });
+
+    $self->{theArray}->load_from_xml( $xml );
 
     if ( defined $iteration ) {
         my @newcomers;
@@ -116,9 +109,12 @@ sub visit_mobil_station {
     my $self = shift;
 
     $self->{newcomers} = [];
+    chdir 'mobil';
         
-    opendir my $dir, 'mobil' or die "couldn't open dir mobil: $!\n";
-    my @files = sort { -M $b <=> -M $a } grep { exists $self->{conf}{player}{$_} } readdir $dir;
+    opendir my $dir, '.' or die "couldn't open dir mobil: $!\n";
+    my @files = sort { -M $b <=> -M $a } 
+                grep { exists $self->{conf}{player}{$_} } 
+                     readdir $dir;
     closedir $dir;
 
     for my $player ( @files ) {
@@ -128,14 +124,17 @@ sub visit_mobil_station {
         my $code;
         {
             undef $/;
-            open $fh, 'mobil/'.$player or die;
+            open $fh, $player or die;
             $code = <$fh>;
             close $fh;
         }
-        unlink 'mobil/'.$player or $self->log( "ERROR: $!" );
+        # TODO remove
+        #unlink $player or $self->log( "ERROR: $!" );
     
         push @{$self->{newcomers}}, [ $player, $date, $code  ];
     }
+
+    chdir '..';
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -157,12 +156,10 @@ sub play_round
 	my $self = shift;
 	
 	# check if the game is over (because a player won)
-	if( $self->get_game_status eq 'over' )
-	{
+	if( $self->get_game_status eq 'over' ) {
 		print "game is already over, exiting\n";
 		return;
 	}
-
 
 	$self->{log} = [];
 	$self->log( localtime() . " : running round ".$self->{round} );
@@ -178,24 +175,10 @@ sub play_round
 	$self->log( "running the Array.." );
     $self->runSlot( $_ ) for 0..$self->{conf}{theArraySize}-1;
 
-	# sanity check, make sure cells without agents are without owner
-	for( 0..$self->{conf}{theArraySize}-1 )
-	{
-		if( $self->{theArray}[ $_ ]{owner} and not length $self->{theArray}[ $_ ]{code} ) 
-		{
-			$self->log( "warning: cell at position is empty and yet owned. Correcting the Array.." );
-			$self->{theArray}[ $_ ] = undef;
-		}
-	}
-
     # end of round checks
-    #
-    delete $_->{freshly_copied} for @{$self->{theArray}};
+    $self->{theArray}->reset_operational;
 
 	# check for victory
-    my @Array = @{ $self->{theArray} };
-    my %survivor;
-
     $self->agent_census;
 
     my @survivors;
@@ -224,6 +207,7 @@ sub play_round
 	if( $self->{round} > $self->{conf}{gameLength} ) {
 		print "number of rounds limit reached, game is over\n";
         $self->set_game_status( 'over' );
+        # TODO find out who's won
 	}
 
     $self->save;
@@ -269,17 +253,7 @@ sub save
   		$writer->endTag;
 	}
 
-	$writer->startTag( 'theArray' );
-	for( 0..$self->{conf}{theArraySize} )
-	{
-		next unless $self->{theArray}[$_];
-  		$writer->startTag( 'slot', id => $_ );
-  		my %slot = %{ $self->{theArray}[$_] };
-  		$writer->dataElement( owner => $slot{owner} );
-  		$writer->dataElement( code => $slot{code} );
-  		$writer->endTag;
-	}
-	$writer->endTag;
+    $self->{theArray}->save_as_xml( $writer );
 
 	$writer->endTag;
 	$writer->end();
@@ -300,7 +274,7 @@ sub saveConfiguration
 	my %conf = @_ == 1 ? %{$_[0]->{conf}} : @_;
 	
 	my $output = new IO::File(">configuration.xml");
-	my $writer = new XML::Writer(OUTPUT => $output);
+	my $writer = new XML::Writer(OUTPUT => $output, NEWLINES => 1);
 
 	$writer->startTag( 'configuration' );
 	$writer->dataElement( 'title', $conf{title} );
@@ -337,11 +311,7 @@ sub checkForEliminatedPlayers
 	
 	$self->log( "checking for eliminated players.." );
 	
-	my %score;
-	for my $pos ( 0..$self->{conf}{theArraySize} -1 ) 
-	{
-		$score{ $self->{theArray}[$pos]{owner} }++;
-	}
+	my %score = $self->{theArray}->census;
 	
 	for my $player ( keys %{ $self->{conf}{player} } )
 	{
@@ -377,30 +347,31 @@ sub introduce_newcomers
             next AGENT;
         }
     
-        my @available_slots;
-        for( 0..$self->{conf}{theArraySize}-1 )
-        {
-            push @available_slots, $_ unless $self->{theArray}[$_];
-        }
+        my @available_slots = $self->{theArray}->empty_cells;
     
         if( @available_slots > 0 )
         {
             my $slot = $available_slots[ rand @available_slots ];
             $self->log( "\tagent inserted at cell $slot" );
-            $self->{theArray}[$slot] = { owner => $player, code => $code };
+            $self->{theArray}->cell( $slot )->insert({
+                owner => $player,
+                code => $code,
+            });
             next AGENT;
         }
-    
-        for( 0..$self->{conf}{theArraySize}-1 )
-        {
-            push @available_slots, $_ if $self->{theArray}[$_]{owner} eq $player;
-        }
+   
+        # no empty cells, maybe a cell already occupied by
+        # the player?
+        @available_slots = $self->{theArray}->cells_belonging_to( $player );
     
         if( @available_slots > 0 )
         {
             my $slot = $available_slots[ rand @available_slots ];
             $self->log( "agent at cell $slot is upgraded" );
-            $self->{theArray}[$slot] = { owner => $player, code => $code };
+            $self->{theArray}->cell( $slot )->insert({
+                owner => $player,
+                code => $code,
+            });
             unlink $player or $self->log( "ERROR: $!" );
             next AGENT;
         }
@@ -425,17 +396,20 @@ sub log
   push @{$self->{log}}, @_;
 }
 
-##########################################################################
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-sub insert_agent
-{
+sub insert_agent {
 	my ( $self, $pos, $player, $code ) = @_;
-	
-	$self->log( "can't insert agent: cell $pos out of bound" )
-		if $pos >= $self->{conf}{theArraySize};
+
+    if( $pos >= $self->{conf}{theArraySize} ) { 
+	    $self->log( "can't insert agent: cell $pos out of bound" );
+        return;
+    }
 		
-	$self->{theArray}[$pos] = { owner => $player, code => $code };
-	
+    $self->{theArray}->cell( $pos )->insert({
+        owner => $player,
+        code => $code,
+    });
 }
 
 ##########################################################################
@@ -444,10 +418,19 @@ sub insert_agent
 # executes the code of $array[0]
 sub execute
 {
-	my $self = shift;
-	local @_ = @_;
+	my( $self, $cell_id ) = @_;
+
+    # what happens in execute(), stays in execute
+    local *STDERR;
+    my $warnings;
+    open STDERR, '>', \$warnings;
+
+    my $owner =  $self->array->cell( $cell_id )->get_owner;
+    
+	local @_ = $self->array->get_code_array( $cell_id );
 	local $_ = $_[0];
-	   
+	my @o = $self->array->get_apparent_owner_array( $cell_id );
+
 	# run this in a safe
 	my $safe = new Safe 'Container';
 	$safe->permit( qw/ rand time sort :browse :default / );
@@ -455,19 +438,21 @@ sub execute
 	my $error;
   
 	eval 
-	{
+	{   
     	local $SIG{ALRM} = sub { die "timed out\n" };
     	alarm 3;
 		undef $@;
 		my $code = $_[0];
 		@Container::Array = @_;
+		@Container::o = @o;
+		@Container::O = $owner;
 		$Container::S = $self->{conf}{snippetMaxLength};
 		$Container::I = $self->{conf}{gameLength};
 		$Container::i = $self->{conf}{currentIteration};
-		$safe->share_from( 'Container', [ '$S', '$I', '$i', '@_' ] );
+		$safe->share_from( 'Container', 
+                           [ '$S', '$I', '$i', '@_', '@o', '$O' ] );
 		$result = $safe->reval( <<EOT );
 local *_ = \\\@Array;
-#*_ = *Array;
 \$_ = \$_[0];
 $code
 EOT
@@ -476,54 +461,53 @@ EOT
     	alarm 0;
   	};
 
-	if( $error )
-	{
-		return( $result, $error );
-	}
-	else
-	{
-		my @array = $safe->reval( '@Array' );
-		$array[0] = $safe->reval( '$_' );
-		return( $result, $error, @array );
-	}
+    return ( $result, $error ) if $error;
+
+    my @code_array = $safe->reval( '@Array' );
+    $owner = $safe->reval( '$o[0]' );
+    $code_array[0] = $safe->reval( '$_' );
+
+    return( $result, $error, $owner, @code_array );
 }
 
 ##########################################################################
 
-sub runSlot 
-{
+sub runSlot {
   	my ( $self, $slotId ) = @_;
 
-	return unless $self->{theArray}[ $slotId ];
+    my $cell = $self->{theArray}->cell( $slotId );
+
+    # diddled cells and empty cells aren't executed
+	return if $cell->is_empty 
+           or not $cell->get_operational;
 	
-	my %slot = %{$self->{theArray}[ $slotId ]};
+	$self->log( "cell $slotId: agent owned by ".$cell->get_owner ); 
 
-	return if $slot{freshly_copied} or not $slot{code};
+    my @code_array  = $self->{theArray}->get_code_array( $slotId );
+    my @owner_array = $self->{theArray}->get_apparent_owner_array( $slotId );
 
-	$self->log( "cell $slotId: agent owned by $slot{owner}" ); 
-
-	my @Array = map $_->{code}, @{$self->{theArray}}[ $slotId..(@{$self->{theArray}}-1), 0..($slotId-1) ];
- 
 	# exceed permited size?
-  	if( length $slot{code} > $self->{conf}{snippetMaxLength} )
-  	{
-    	$self->log( "\tagent crashed: is ".length($Array[0])." chars, exceeds max permitted size $self->{conf}{snippetMaxSize}" ); 
-    	$self->{theArray}[ $slotId ] = {};
+    my $code = $cell->get_code;
+  	if( length $code > $self->{conf}{snippetMaxLength} ) {
+    	$self->log( "\tagent crashed: is ".length($code)." chars, exceeds max permitted size $self->{conf}{snippetMaxSize}" ); 
+        $cell->delete;
     	return;
   	}
 
   	$self->log( "\texecuting.." );
   	
-  	my( $result, $error );
-  	( $result, $error, @Array ) = $self->execute( @Array );
-
-	$self->{theArray}[$slotId]{code} = $Array[0];
+  	my( $result, $error, $facade, @Array );
+    # TODO  squeeze in the ownership array
+  	( $result, $error, $facade, @Array ) = $self->execute( $slotId );
 
 	if( $error ) {
     	$self->log( "\tagent crashed: $error" );
-    	$self->{theArray}[$slotId] = {};
+        $cell->delete;
     	return;
   	} 
+
+    $cell->set_code( $Array[0] );
+    $cell->set_apparent_owner( $facade );
 
   	my $output = $result;
   	$output = substr( $output, 0, 24 ).".." if length $output > 25;
@@ -554,12 +538,12 @@ sub _nuke_operation {
     $target_index = $self->relative_to_absolute_position( $agent_index, $target_index );
     return if $target_index == -1;
     
-    unless( $self->{theArray}[ $target_index ] ) {
+    if( $self->array->cell( $target_index )->is_empty ) {
         $self->log( "\tno agent found at cell $target_index" );
         return;
     }
 		
-    $self->{theArray}[ $target_index ] = { };
+    $self->array->cell( $target_index )->clear;
     $self->log( "\tagent in cell $target_index destroyed" );
 }
 
@@ -570,72 +554,18 @@ sub _p0wn_operation {
 
     return if $target_index == -1;
 
-    unless( $self->{theArray}[$target_index] and $self->{theArray}[$target_index]{code} ) {
+    my $target = $self->{theArray}->cell( $target_index );
+
+    if( $target->is_empty ) {
 	   $self->log( "\tno agent to p0wn in cell $target_index" );
 	   return;
     }
 
     $self->log( "\tagent in cell $target_index p0wned" );
-    $self->{theArray}[$target_index]{owner} = $self->{theArray}[$agent_index]{owner};
+    $target->set_owner( $self->{theArray}->cell( $agent_index )->get_owner );
 }
 
-sub _alter_operation {
-    my ( $self, $agent_index, $target_index, $Array_ref ) = @_;
-
-    my $abs_target_index = $self->relative_to_absolute_position( $agent_index, $target_index );
-    return if $abs_target_index == -1;
-      
-    unless( $self->{theArray}[$abs_target_index] and $self->{theArray}[$abs_target_index]{code} ) {
-        $self->log( "\tno agent found at cell $abs_target_index" );
-      	return;
-    }
-
-    $self->{theArray}[$abs_target_index]{code} = $Array_ref->[$target_index];
-    $self->log( "\tcode of agent in cell $abs_target_index altered" );
-}
-
-sub agent_census {
-    my( $self ) = @_;
-
-    my %player = %{$self->{conf}{player}};
-    my @theArray = @{$self->{theArray}};
-
-    $player{$_}{agents} = 0 for keys %player;
-
-    for my $cell ( @theArray ) {
-        $player{$cell->{owner}}{agents}++ if $cell->{owner};
-    }
-}
-
-sub _copy_operation {
-    my( $self, $agent_index, $source_index, $dest_index ) = @_;
-    
-    $source_index = $self->relative_to_absolute_position( $agent_index, $source_index );
-    $dest_index   = $self->relative_to_absolute_position( $agent_index, $dest_index );
-    
-    # source or destination invalid? We do nothing
-    return if $source_index == -1 or $dest_index == -1;
-    
-    if( $self->{theArray}[$dest_index]{owner} 
-            and $self->{theArray}[$dest_index]{owner} ne $self->{theArray}[$agent_index]{owner} )
-    {
-        $self->log( "\tagent in cell $dest_index already owned by $self->{theArray}[$dest_index]{owner}" );
-        return;
-    }
-
-    $self->log( "\tagent of cell $source_index copied into cell $dest_index" );
-    $self->{theArray}[$dest_index] = { %{$self->{theArray}[$source_index]} };
-    $self->{theArray}[$dest_index]{freshly_copied} = 1 ;
-}
-
-sub _noop_operation {
-    my( $self ) = @_;
-    
-    $self->log( "\tno-op" );
-}
-
-sub relative_to_absolute_position
-{
+sub relative_to_absolute_position {
   my( $self, $slotId, $shift ) = @_;
   $shift ||= 0;
 
@@ -649,6 +579,55 @@ sub relative_to_absolute_position
   return $slotId;
 }
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+sub _alter_operation {
+    my ( $self, $agent_index, $target_index, $Array_ref ) = @_;
+
+    my $abs_target_index = $self->relative_to_absolute_position( $agent_index, $target_index );
+    return if $abs_target_index == -1;
+
+    my $target = $self->{theArray}->cell( $abs_target_index );
+   
+    if ( $target->is_empty ) {
+        $self->log( "\tno agent found at cell $abs_target_index" );
+      	return;
+    }
+
+    $target->set_code( $Array_ref->[$target_index] );
+    $self->log( "\tcode of agent in cell $abs_target_index altered" );
+}
+
+sub _copy_operation {
+    my( $self, $agent_index, $source_index, $dest_index ) = @_;
+    
+    $source_index = $self->relative_to_absolute_position( $agent_index, $source_index );
+    $dest_index   = $self->relative_to_absolute_position( $agent_index, $dest_index );
+    
+    # source or destination invalid? We do nothing
+    return if $source_index == -1 or $dest_index == -1;
+
+    my $theArray = $self->{theArray};
+    my $target = $theArray->cell( $dest_index );
+    my $agent = $theArray->cell( $agent_index );
+    
+    if( $target->get_owner 
+        and $target->get_owner ne $agent->get_owner )
+    {
+        $self->log( "\tagent in cell $dest_index already owned by ".
+                    $target->get_owner );
+        return;
+    }
+
+    $self->log( "\tagent of cell $source_index copied into cell $dest_index" );
+    $target->copy( $agent );
+    $target->set_operational( 0 );
+}
+
+sub _noop_operation {
+    $_[0]->log( "\tno-op" );
+}
+
 sub readCell {
 	my( $self, $cellId ) = @_;
 	return undef unless $self->{theArray}[$cellId];
@@ -658,6 +637,25 @@ sub readCell {
 sub writeCell {
 	my( $self, $pos, $owner, $code ) = @_;
 	$self->{theArray}[$pos] = { owner => $owner, code => $code };
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+sub array {
+    return $_[0]->{theArray};
+}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+sub agent_census {
+    my( $self ) = @_;
+
+    my %player = %{$self->{conf}{player}};
+
+    my %census = $self->{theArray}->census;
+
+    for my $p ( keys %player ) {
+        $player{$p}{agents} = $census{$p} || 0;
+    }
 }
 
 
