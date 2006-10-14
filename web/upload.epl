@@ -1,5 +1,45 @@
+<html>
+<head><TITLE></TITLE></head>
+<style>
+	BODY { background-color: black; color: lightgreen; font-family: sans-serif;}
+</style>
+<body>
+
+[$ if $fdat{agent} $]
+    [- process_entry() -]
+[$ else $]
+    [- entry_form() -]
+[$ endif $]
+
+    
+
+<p>
+return to <a href="[+ $fdat{game} +]/round_current.xml">main page</a>
+</p>
+
+</body>
+</html>
+
+[$ sub entry_form $]
+<FORM>
+<input type='hidden' name='game' value='[+ $fdat{game} +]' />
+<table>
+<TR><TD>player:</TD><TD><INPUT type="text" name="player"></TD>
+<TD>password:</TD><TD><INPUT type="password" name="password"></TD>
+<td><INPUT type="submit" value="upload"></td></TR>
+<TR><TD valign='top'>agent:</TD><TD colspan="4"><textarea name="agent" cols="80" rows="40"></textarea></TD></TR>
+</table>
+</FORM>
+
+[$ endsub $]
+
+[$ sub process_entry $]
 [! use XML::Simple; !]
-[- $path = $epreq->component->cwd  -]
+[- 
+    $fdat{game} or die "no game provided\n";
+    $path = $epreq->component->cwd;
+   $path .= '/'.$fdat{game}; 
+-]
 [- chdir $path or die -]
 [-
 	open CONF, "configuration.xml" or die $!;
@@ -11,9 +51,6 @@
 	( $player ) = grep $_->{content} eq $fdat{player}, @{$conf->{player}};
 -]
 
-<html>
-<head><TITLE></TITLE></head>
-<body>
 [$ if $player->{password} ne $fdat{password} $]
 [- $req_rec->status( 401 ); -]
 <p>player not recognized or password not valid</p>
@@ -24,7 +61,8 @@ my $existed;
 $existed = 1 if -e "mobil/$fdat{player}";
 
 my $fagent;
-open $fagent, '>', "mobil/$fdat{player}" or die $!;
+open $fagent, '>', "mobil/$fdat{player}" 
+    or die $!;
 
 print $fagent $fdat{agent};
 close $fagent;
@@ -40,9 +78,4 @@ close $fagent;
 
 [$ endif $]
 
-<p>
-return to <a href="round_current.xml">main page</a>
-</p>
-
-</body>
-</html>
+[$ endsub $]
