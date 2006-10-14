@@ -168,11 +168,19 @@ div.entry { display: block }
     margin-top: 15px;
   }
 
+h1 { float: right; margin-top: 0px; margin-right: 100px;}
+
+
 </style>
 </head>
 <body>
 
-<h1><img src="/perlwar/logo.png" alt="PerlWar" /> : <%= apply_templates( '/perlwar/configuration/title' ) %></h1>
+<div style="background: url(/perlwar/line.png);" >
+<h1>
+    <%= apply_templates( '/perlwar/configuration/title' ) %>
+</h1>
+<img src="/perlwar/logo.png" alt="PerlWar" style="display: inline" />  
+</div>
 
 <div class="rightSide">
 
