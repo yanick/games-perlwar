@@ -12,7 +12,6 @@ Module::Build->new(
         'File::Copy'       => 0,
         'Carp'             => 0,
         'IO::Prompt'       => 0,
-        'version'          => 0,
         'Class::Std'       => 0,
         'Safe'             => 0,
         'XML::Writer'      => 0,

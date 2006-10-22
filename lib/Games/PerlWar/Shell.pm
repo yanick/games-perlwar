@@ -3,7 +3,7 @@ package Games::PerlWar::Shell;
 use strict;
 use warnings;
 
-use version; our $VERSION = qv('0.02');
+our $VERSION = '0.02';
 
 use Cwd;
 use Games::PerlWar;
