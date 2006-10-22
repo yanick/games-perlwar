@@ -1,11 +1,12 @@
 MANIFEST
+Build.PL
 Makefile.PL
 Changes
 README
 scripts/pwcreate
 scripts/pwround
 scripts/pwupload
-script/perlwar
+scripts/perlwar
 t/01general.t
 t/configuration.xml
 t/round_current.xml
@@ -15,4 +16,15 @@ lib/Games/PerlWar/Rules.pod
 lib/Games/PerlWar/Array.pm
 lib/Games/PerlWar/Cell.pm
 lib/Games/PerlWar/Shell.pm
+lib/Games/PerlWar/AgentEval.pm
 META.yml                                 Module meta-data (added by MakeMaker)
+web/htaccess
+web/line.png
+web/logo.png
+web/perlwar.css
+web/perlwar.ico
+web/perlwar.js
+web/stylesheets/configuration.xps
+web/stylesheets/include_config.xps
+web/stylesheets/iteration2html.xps
+web/stylesheets/upload.xps
