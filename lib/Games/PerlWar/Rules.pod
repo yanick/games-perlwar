@@ -2,6 +2,7 @@
 
 Games::PerlWar - A Perl variant of the classic Corewar game
 
+
 =head1 DESCRIPTION
 
 	This is a sparring program, similar to the programmed reality of the Matrix. 
@@ -189,6 +190,11 @@ in the Array.
 In this variant, the agent maximal size is decremented after each turn. 
 
 =back
+
+=head1 VERSION
+
+This document describes the rules of PerlWar as implemented 
+in Games::PerlWar v0.02.
 
 
 =cut

@@ -1,5 +1,7 @@
 package Games::PerlWar::Array;
 
+use version; our $VERSION = qv('0.02');
+
 use strict;
 use warnings;
 use Carp;

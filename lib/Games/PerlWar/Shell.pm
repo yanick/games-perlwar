@@ -1,7 +1,9 @@
+package Games::PerlWar::Shell;
+
 use strict;
 use warnings;
 
-package Games::PerlWar::Shell;
+use version; our $VERSION = qv('0.02');
 
 use Cwd;
 use Games::PerlWar;
@@ -10,6 +12,7 @@ use File::Copy;
 use IO::Prompt;
 use Term::ShellUI;
 use IO::Prompt;
+
 
 my $pw;
 # TODO: add color entry for players and default colors

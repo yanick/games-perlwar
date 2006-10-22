@@ -1,7 +1,8 @@
+package Games::PerlWar::AgentEval;
+
 use strict;
 use warnings;
-
-package Games::PerlWar::AgentEval;
+use version; our $VERSION = qv('0.02');
 
 use Class::Std;
 use Carp;

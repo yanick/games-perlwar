@@ -1,6 +1,6 @@
 package Games::PerlWar;
 
-use version; our $VERSION = qv('0.1_1');
+use version; our $VERSION = qv('0.02');
 
 use strict;
 use warnings;
