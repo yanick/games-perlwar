@@ -59,7 +59,7 @@ is $cell->set_code( '@x = map undef, 0..5; join ":",@x' )
 # variables accessibles from a cell
 # $S, $I, $i
 $pw->array->cell(9)->set_code('"$S:$I:$i"');
-is $pw->run_cell(9)->return_value => '67:97:13', '$S, $I, $i';
+is $pw->run_cell(9)->return_value => '67:95:13', '$S, $I, $i';
 
 # And now, operations
 

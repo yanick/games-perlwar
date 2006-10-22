@@ -1,7 +1,66 @@
 element player {
-   text 
+   attribute name { text } 
    attribute password { text }
    attribute color    { text }
    # EOT means that the player has lost
-   attribute status   { "EOT" | "OK" }
+   attribute status   { "EOT" | "active" | "w1nn3r" }
 }
+
+# round
+
+element iteration {
+    attribute nbr { text }
+
+    element summary { # summary of the game, at the iteration's end
+        element status { "not started yet" | "ongoing" | "over" }
+        element player { 
+            attribute name { text }
+            attribute status { "EOT" | "OK" }
+            attribute color { text }
+            attribute agents { text }
+        }
+    }
+
+    element newcomers {
+        element newcomer {
+            attribute player { text }
+            attribute time { text }
+            text
+        }
+    }
+
+    element array {
+        attribute size { text } 
+        element agent {
+            attribute position { text } 
+            attribute owner { text }
+            attribute facade { text }
+            text  # the code
+        }
+    }
+}
+
+# configuration
+element configuration {
+    element title { text }
+    element gameVariant { "blitzkrieg" }
+    element gameLength { text }
+    element theArraySize { text }
+    element agentMaxSize { text }
+    element mambo {
+        attribute decrement { text }
+    }
+
+    element players {
+        attribute list { "adhoc" | "predefined" }
+        attribute community { text }     # community of potential players
+        element player {
+            attribute name { text }
+            attribute password { text }
+            attribute color { text }
+        }
+    }
+
+    element notes { text }
+}
+

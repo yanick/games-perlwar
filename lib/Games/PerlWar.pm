@@ -9,6 +9,7 @@ use utf8;
 use Safe;
 use XML::Simple;
 use XML::Writer;
+use XML::LibXML;
 use IO::File;
 
 use Games::PerlWar::Array;
@@ -19,7 +20,7 @@ use Games::PerlWar::AgentEval;
 
 sub new {
     my( $class, $dir ) = @_;
-    my $self = { dir => $dir, interactive => 1 };
+    my $self = { dir => $dir || '.', interactive => 1 };
     chdir $self->{dir};
     bless $self, $class;
 }
@@ -33,76 +34,120 @@ sub clear_log {
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+sub load_players_from_config {
+    my( $self, $config ) = @_;
+
+    my %player;
+    for my $player ( $config->findnodes( '/configuration/players/player' ) ) {
+        my $name   = $player->findvalue( '@name' );
+        my $color  = $player->findvalue( '@color' );
+        my $status = $player->findvalue( '@status' ) || 'OK' ;
+
+        $player{ $name } = { color => $color, status => $status };
+    }
+
+    return %player;
+}
+
+sub load_players_from_iteration {
+    my( $self, $iter ) = @_;
+
+    my %player;
+    for my $player ( $iter->findnodes( '/iteration/summary/player' ) ) {
+        my $name   = $player->findvalue( '@name' );
+        my $color  = $player->findvalue( '@color' );
+        my $status = $player->findvalue( '@status' ) || 'OK' ;
+
+        $player{ $name } = { color => $color, status => $status };
+    }
+
+    return %player;
+}
+
+sub load_players_adhoc {
+    my( $self, $config ) = @_;
+
+    my $community_file = $config->findvalue(
+                            '/configuration/players/@community' );
+    my @players = XML::LibXML->new
+                             ->parse_file( $community_file )
+                             ->findnodes( '//player' );
+
+    @players = grep { -e 'mobil/'.$_->findvalue('@name') } @players;
+
+    my %player;
+    for my $player ( @players ) {
+        my $name   = $player->findvalue( '@name' );
+        my $color  = $player->findvalue( '@color' );
+        my $status = 'OK' ;
+
+        $player{ $name } = { color => $color, status => $status };
+    }
+
+    return %player;
+}
+
 sub load {
-    my ( $self, $iteration ) = @_;
+    my ( $self, $iteration, $replay ) = @_;
+
+    # if it's a replay, we load from the current iteration,
+    # then get the newcomers from the next iteration.
+    # if not, we get the newcomers from mobil station
+    # the loading of newcomers must happen in 
+    # run_iteration
+
 	
-	print "loading configuration.. ";
+	print "loading configuration.. \n";
 
-	$self->{conf} = XMLin( 'configuration.xml' );
-	my %players;
-	for( @{$self->{conf}{player}} )
-	{
-		$players{ $_->{content} } = { 
-                password => $_->{password},
-				color => $_->{color}, 
-        };
-	}
-	$self->{conf}{player} = \%players;
+    my $parser = XML::LibXML->new;
 
-    my $xml;
+    my $config = $parser->parse_file( 'configuration.xml' );
+
+    $self->{replay} = $replay;
+
     my $filename;
     if ( defined $iteration ) {
         $filename = sprintf( "round_%05d.xml", $iteration );
-        -e $filename or die "couldn't load round $iteration\n";
+        die "can't load iteration $iteration\n" 
+            unless -e $filename;
     } 
     else {
         $filename = 'round_current.xml';
     }
-    $xml = XML::LibXML->new->parse_file( $filename );
+    my $current_iteration = $parser->parse_file( $filename );
 
-	$self->{round} = $xml->findvalue( '/round/@number' ) || 0;
-    $self->{round}++ unless defined $iteration;
-	print "this is round $self->{round}\n";
+	$self->{round} = $current_iteration->findvalue( '/iteration/@nbr' );
+	print "loading iteration $self->{round}\n";
 
+    $self->{conf}{gameLength} = 
+        $config->findvalue( '/configuration/gameLength/text()' );
+    $self->{gameVariant} = 
+        $config->findvalue( '/configuration/gameVariant/text()' );
+    $self->{conf}{agentMaxSize} = 
+        $config->findvalue( '/configuration/agentMaxSize/text()' );
+
+    $self->{conf}{theArraySize} = 
+        $config->findvalue( '/configuration/theArraySize/text()' );
 	$self->{theArray} = Games::PerlWar::Array->new({ 
                             size => $self->{conf}{theArraySize} });
+    $self->{theArray}->load_from_xml( $current_iteration );
 
-    $self->{theArray}->load_from_xml( $xml );
-
-    if ( defined $iteration ) {
-        my @newcomers;
-        for my $n ( $xml->findnodes( '/newcomer' ) ) {
-            push @newcomers, { map { $n->findvalue( $_ ) } 
-                                    '@player', '@time', 'text()' };
-        }
-        $self->{newcomers} = \@newcomers;
-        $self->{old_iteration} = 1;
+    if ( $self->{round} == 0 ) {
+        
+        $self->{conf}{player} = { 
+            $config->findvalue( '//players/@list' ) eq 'predefined' 
+                ?  $self->load_players_from_config( $config ) 
+                :  $self->load_players_adhoc( $config )
+        };
     }
-
-    my @players = keys %{ $self->{conf}{player} };
-    my $actives;
-    $self->agent_census;
-    # everyone's active on round 1
-    if ( $self->{round} == 1 ) {
-        $self->{conf}{player}{$_}{status} = 'OK' for @players;
-        $actives = 99;
-    } 
     else {
-        for( @players) {
-            $self->{conf}{player}{$_}{status} = $self->{conf}{player}{$_}{agents} 
-                                              ? 'OK' 
-                                              : 'EOT'
-                                              ;
-            $actives++ if $self->{conf}{player}{$_}{agents};
-        } 
+        $self->{conf}{player} = { $self->load_players_from_iteration(
+                                                    $current_iteration ) };
     }
-
+       
     $self->set_game_status( 
-        # game is over if we're out of time or there's only one man standing
-        ( $actives < 2 ) || ( $self->{round} > $self->{conf}{gameLength} )
-            ? 'over'
-            : ''
-    );
+        $current_iteration->findvalue( '/iteration/summary/status' ) 
+            || 'ongoing' );
 }   
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -119,6 +164,7 @@ sub visit_mobil_station {
                      readdir $dir;
     closedir $dir;
 
+    my @newcomers;
     for my $player ( @files ) {
         my $date = localtime( $^T - (-M $player)*24*60*60 );
 		
@@ -130,13 +176,15 @@ sub visit_mobil_station {
             $code = <$fh>;
             close $fh;
         }
-        # TODO remove
-        #unlink $player or $self->log( "ERROR: $!" );
+
+        unlink $player or $self->log( "ERROR: $!" );
     
-        push @{$self->{newcomers}}, [ $player, $date, $code  ];
+        push @newcomers, [ $player, $date, $code  ];
     }
 
     chdir '..';
+
+    return @newcomers;
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -162,6 +210,8 @@ sub play_round
 		print "game is already over, exiting\n";
 		return;
 	}
+
+    $self->{round}++;
 
 	$self->{log} = [];
 	$self->log( localtime() . " : running round ".$self->{round} );
@@ -204,17 +254,33 @@ sub play_round
     }
 
 	# check if the game is over (because round > game length)
-	$self->{round}++;
-	$self->{conf}{currentIteration} = $self->{round};
-	if( $self->{round} > $self->{conf}{gameLength} ) {
-		print "number of rounds limit reached, game is over\n";
-        $self->set_game_status( 'over' );
-        # TODO find out who's won
-	}
+    $self->endtime_reached if $self->{round} >= $self->{conf}{gameLength};
 
     $self->save;
     delete $self->{newcomers};
     delete $self->{old_iteration};
+}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+sub endtime_reached {
+    my $self = shift;
+
+    print "number of rounds limit reached, game is over\n";
+    $self->set_game_status( 'over' );
+
+    my $player = $self->{conf}{player};
+
+    my %census = $self->agent_census;
+
+    my @k = reverse sort { $census{$a} <=> $census{$b} } 
+                    grep { $player->{status} == 'OK' } keys %$player;
+
+    return unless @k;
+
+    $player->{ shift @k }{status} = 'w1nn3r';
+    $player->{$_}{status} = 'EOT' for @k;
+
+    return;
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -225,7 +291,7 @@ sub save
 	
 	print "saving round $self->{round}..\n";
 	
-	$self->saveConfiguration;
+	#$self->saveConfiguration;
 	
 	#XMLout( $self->{conf}, OutputFile => "configuration.xml", RootName => 'configuration' );
 	
@@ -233,7 +299,23 @@ sub save
 	my $output = new IO::File(">round_current.xml");
 	my $writer = new XML::Writer(OUTPUT => $output);
 
-	$writer->startTag( "round", number => $self->{round} );
+	$writer->startTag( "iteration", nbr => $self->{round} );
+
+    $writer->startTag( 'summary' );
+    $writer->dataElement( 'status' =>  $self->get_game_status ); 
+
+    my %census = $self->agent_census;
+
+    for my $p ( keys %{$self->{conf}{player} } ) {
+        $writer->emptyTag( 'player', 
+            name   => $p,
+            status => $self->{conf}{player}{$p}{status},
+            color  => $self->{conf}{player}{$p}{color},
+            agents => $census{ $p },
+        );
+    }
+
+    $writer->endTag( 'summary' );
 	
 	if( $self->{newcomers} )
 	{
@@ -273,6 +355,7 @@ sub save
 
 sub saveConfiguration
 {
+    die "obsolete\n";
 	my %conf = @_ == 1 ? %{$_[0]->{conf}} : @_;
 	
 	my $output = new IO::File(">configuration.xml");
@@ -290,7 +373,8 @@ sub saveConfiguration
 	{
 		$writer->dataElement( 'mamboDecrement', $conf{mamboDecrement} );
 	}
-	$writer->dataElement( 'note', $conf{note} );
+	$writer->dataElement( 'note', ref $conf{note} ? %{$conf{note}} 
+                                                  : $conf{note}   );
 	
 	foreach( keys %{$conf{player}} )
 	{
@@ -327,6 +411,25 @@ sub checkForEliminatedPlayers
 	
 }
 
+sub get_iteration_newcomers {
+    my( $self, $iteration ) = @_;
+
+    my $iter = XML::LibXML->new->parse_file(
+        sprintf( "round_%05d.xml", $iteration )
+    );
+
+    my @newcomers;
+    for my $n ( $iter->findnodes( '//newcomer' ) ) {
+        my $owner = $n->findvalue( '@player' );
+        my $code = $n->findvalue( 'text()' );
+        my $date = $n->findvalue( '@time' );
+
+        push @newcomers, [ $owner, $date, $code ];
+    }
+
+    return @newcomers;
+}   
+
 ##########################################################################
 
 sub introduce_newcomers
@@ -334,9 +437,13 @@ sub introduce_newcomers
 	no warnings 'uninitialized';
 	my $self = shift;
 
-    $self->visit_mobil_station unless $self->{old_iteration};
+    # TODO special case for adhoc at iteration 0
+   
+    my @newcomers = $self->{replay} ? $self->get_iteration_newcomers( )
+                                    : $self->visit_mobil_station
+                                    ;
 
-    my @newcomers = @{$self->{newcomers}};
+    $self->{newcomers} = \@newcomers;
 
     $self->log( "\tno-one was aboard" ) unless @newcomers;
 
@@ -422,9 +529,9 @@ sub run_cell {
 
     return $self->array->run_cell( $cell_id => {  
        %vars,
-       '$S' => $self->{conf}{snippetMaxLength},
+       '$S' => $self->{conf}{agentMaxSize},
        '$I' => $self->{conf}{gameLength},
-       '$i' => $self->{conf}{currentIteration},
+       '$i' => $self->{round},
     } );
 
 }
@@ -505,7 +612,7 @@ sub runSlot {
 
 	# exceed permited size?
     my $code = $cell->get_code;
-  	if( length $code > $self->{conf}{snippetMaxLength} ) {
+  	if( length $code > $self->{conf}{agentMaxSize} ) {
     	$self->log( "\tagent crashed: is ".length($code)." chars, exceeds max permitted size $self->{conf}{snippetMaxSize}" ); 
         $cell->delete;
     	return;
@@ -675,6 +782,8 @@ sub agent_census {
     for my $p ( keys %player ) {
         $player{$p}{agents} = $census{$p} || 0;
     }
+
+    return %census;
 }
 
 

@@ -1,4 +1,9 @@
-BODY { background-color: black; color: lightgreen; font-family: sans-serif;}
+BODY { 
+    background-color: black; 
+    color: lightgreen; 
+    font-family: sans-serif;
+    width: 850px;
+}
 
 A:link { text-decoration: overline; color: #00A713  }
 A:visited { text-decoration: overline; color: #00A713  }
@@ -76,6 +81,10 @@ div.entry { display: block }
     text-decoration : line-through;
   }
 
+.w1nn3r:after {
+    content: "*"; 
+    color: gold;
+}
 
 .leftSide {
     position: absolute;

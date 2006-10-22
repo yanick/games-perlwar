@@ -9,7 +9,7 @@ use XML::Simple;
 use File::Copy;
 use IO::Prompt;
 use Term::ShellUI;
-use IO::Prompt qw/ hand_print /;
+use IO::Prompt;
 
 my $pw;
 # TODO: add color entry for players and default colors
@@ -127,53 +127,79 @@ sub do_create {
     mkdir 'mobil' or die "couldn't create directory mobil:$!\n";
 
     print "\n\ngame configuration\n";
-    my %conf;
 
-    $conf{gameStatus} = 'ongoing';
+    my $config_file = IO::File->new( '>configuration.xml' )
+        or die "can't create configuration file: $!\n";
 
-    my $input = prompt "game title [$game_name]: ", -d => $game_name; 
+    my $conf = XML::Writer->new( OUTPUT => $config_file, 
+                                 NEWLINES => 1 );
 
-    $game_name = $input || $game_name;
+    $conf->startTag( 'configuration' );
 
-    $conf{title} = $game_name;
+    $game_name =~ s#^.*/##;  # remove path if any
+    $conf->dataElement( title =>
+        prompt "game title [$game_name]: ", -d => $game_name );
 
-    $conf{theArraySize} = 
-        prompt -integer, "Size of the Array [100]: ", -d => 100;
+    $conf->dataElement( gameLength => 
+        my $gameLength = prompt -integer, 
+                            "game length (0 = open-ended game) [100]: ", 
+                            -d => 100                                    );
 
-    $conf{gameLength} = prompt 
-                        -integer, 
-                        "game length (0 = open-ended game) [100]: ",
-                        -d => 100;
+    $conf->dataElement( theArraySize =>
+        prompt -integer, "size of the Array [100]: ", -d => 100 );
 
-    $conf{currentIteration} = 0;
+    $conf->dataElement( agentMaxSize =>
+        prompt -integer, "agent max. size [100]: ", -d => 100 );
 
-    $conf{snippetMaxLength} = prompt -integer, "snippet max. length [100]: ", 
-                                -d => 100;
-
-    $conf{mamboDecrement} = prompt -integer, 
-            "mambo game (0=no, any positive integer is taken as the decrement)[0]: ", 
-        -d => 0;
-
-    my %players;
-    $conf{player} = \%players;
-
-    while(1) {
-        my $line = prompt "enter a player (name password [color]), or nothing if done: ";
-        my( $name, $password, $color ) = split ' ', $line, 3;
-        
-        last unless $name;
-
-        $color ||= shift @colors;
-		
-        $players{ $name } = { password => $password, color => $color };
+    if ( prompt -y => "blitzkrieg? [yN]: ", -d => 0 ) {
+        $conf->dataElement( 'gameVariant', 'blitzkrieg' );
     }
 
-    print "notes (empty line to terminate):\n";
-    $conf{note} .= $_ while length( $_ = prompt );
+    if( prompt -y => "mambo war? [n]: ", -d => 0 ) {
+        $conf->emptyTag( 'mambo', decrement =>
+            prompt "decrement per iteration [1]: ", -d => 1
+        );
+    }
 
-    print "saving configuration..\n";
+    my $player_list_type = 
+        prompt -menu => [ qw/ adhoc predefined / ], "type of player list: ";
 
-    Games::PerlWar::saveConfiguration( %conf );
+    if ( $player_list_type eq 'adhoc' ) {
+        $conf->emptyTag( 'players', 
+                            list => $player_list_type,
+                            community =>
+                                prompt "community file [h4x00rs.xml]: ",
+                                        -d => 'h4x00rs.xml' 
+        );
+    }
+    else {
+        $conf->startTag( 'players', list => $player_list_type );
+
+        while(1) {
+            my $line = prompt "enter a player (name password [color]), or nothing if done: ";
+            my( $name, $password, $color ) = split ' ', $line, 3;
+            
+            last unless $name;
+
+            $color ||= shift @colors;
+
+            $conf->emptyTag( 'player', name => $name, 
+                                       password => $password,
+                                       color => $color );
+        }
+
+        $conf->endTag( 'players' );
+    }
+
+    print "notes (CTL-D to terminate):\n";
+    my $note;
+    $note .= $_ while <>;
+
+    $conf->dataElement( notes => $note ) if $note;
+
+    $conf->endTag( 'configuration' );
+    $conf->end;
+    $config_file->close;
 
     print "creating round 0.. \n";
 
@@ -181,9 +207,8 @@ sub do_create {
     {
         my $fh;
         open $fh, ">$filename" or die "can't create file $game_dir/$filename: $!\n";
-        print $fh "<round id='0'><theArray>\n";
-        print $fh "<slot id='$_'><owner></owner><code></code></slot>\n" for 0..$conf{theArraySize}-1;
-        print $fh "</theArray><log/></round>";
+        print $fh "<iteration nbr='0'>",
+                    "<summary><status>not started yet</status></summary><theArray/><log/></iteration>\n";
         close $fh;
     }
 

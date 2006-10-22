@@ -106,6 +106,7 @@ sub copy {
 }
 
 sub save_as_xml {
+    die "obsolete";
     my( $self, $writer ) = @_;
     my $id = ident $self;
 

@@ -29,18 +29,18 @@ sub load_from_xml {
     my( $self, $xml ) = @_;
     my $id = ident $self;
 
-    for my $cell ( $xml->findnodes( '//slot' ) ) {
-        my $position = $cell->findvalue( '@id' );
-		my $owner = $cell->findvalue( "owner/text()" );
-		my $apparent_owner = 
-            $cell->findvalue( "apparent_owner/text()" );
-		my $code = $cell->findvalue( "code/text()" );
+    for my $cell ( $xml->findnodes( '//agent' ) ) {
+        my $position = $cell->findvalue( '@position' );
+		my $owner = $cell->findvalue( '@owner' );
+		my $facade = 
+            $cell->findvalue( '@facade' );
+		my $code = $cell->findvalue( "text()" );
         utf8::decode( $code );
 
         $self->set_cell( $position => {
                 owner => $owner,
                 code => $code,
-                ( apparent_owner => $apparent_owner ) x !! $apparent_owner,
+                facade => $facade,
         } );
     }
 }
@@ -144,7 +144,7 @@ sub cells_belonging_to {
     my( $self, $player ) = @_;
     my $id = ident $self;
 
-    return grep { $cells_of{$id}[$_]->get_owner eq $player } 0..$size_of{ $id };
+    return grep { $_->get_owner eq $player } @{ $cells_of{$id} };
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -165,10 +165,19 @@ sub save_as_xml {
         
 	$writer->startTag( 'theArray', size => $size_of{ $id } );
     for my $id ( 0..@{$cells_of{ $id}} ) {
-        next if $self->cell( $id )->is_empty;
-        $writer->startTag( 'slot', id => $id );
-        $self->cell( $id )->save_as_xml( $writer );
-        $writer->endTag;
+        my $cell = $self->cell( $id );
+        next if $cell->is_empty;
+
+        my $owner = $cell->get_owner;
+        my $facade = $cell->get_facade;
+
+        $facade = undef if $facade eq $owner;
+
+        $writer->dataElement( 'agent', $cell->get_code,
+                                        position => $id, 
+                                        owner => $owner,
+                                        ( facade => $facade ) x !!$facade,
+                            );
     }
     $writer->endTag;
 }   

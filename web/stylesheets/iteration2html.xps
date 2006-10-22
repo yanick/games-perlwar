@@ -19,12 +19,10 @@ $t->set( 'entry' => {
     perlwar - <%~ /perlwar/configuration/title %>
 </title>
 
-<link REL="icon" HREF="perlwar.ico" />
-<link REL="SHORTCUT ICON" HREF="perlwar.ico" />
-<script type="text/javascript" src="/perlwar/perlwar.js" >
-</script>
-
+<link REL="icon" HREF="/perlwar/perlwar.ico" />
+<link REL="SHORTCUT ICON" HREF="/perlwar/perlwar.ico" />
 <link rel="stylesheet" type="text/css" href="/perlwar/perlwar.css" />
+<script type="text/javascript" src="/perlwar/perlwar.js" > </script>
 
 </head>
 <body>
@@ -40,22 +38,51 @@ $t->set( 'entry' => {
 
 <div class="summary">
 <div align="center">
-    iteration <%= findvalue( '/perlwar/iteration/@nbr' ) || '0'  %>
+    <% my $iteration = findvalue( '/perlwar/iteration/@nbr' ) || 0 %>
+    iteration <%= $iteration  %>
 </div>
 <br/>
 <%
-	my %players;
-	$players{''} = { color => 'lightgrey' };
-	for( findnodes( '/perlwar/configuration/players/player' ) )
-	{
-		my $name = $_->findvalue('@name');
-		$players{ $name  } = { color => $_->getAttribute( 'color' ) };
-		$players{ $name }{status} = $_->getAttribute( 'status' );
-		$players{ $names }{score} = 0;
-        
-        $players{$name}{score} = 
-            findvalue( "//summary/player[\@name = '$name' ]/\@agents" );
-	}
+	my %players = ( '' => { color => 'lightgrey' } );
+
+    if ( $iteration > 0 ) {
+        for( findnodes( '/perlwar/iteration/summary/player' ) ) {
+            my $name = $_->findvalue('@name');
+            $players{ $name  } = { color => $_->getAttribute( 'color' ) };
+            $players{ $name }{status} = $_->getAttribute( 'status' );
+            $players{ $name }{score} = $_->getAttribute( 'agents' );
+        }   
+    }
+    else {
+        if ( findvalue( '/perlwar/configuration/players/@list' ) 
+                eq 'predefined' ) {
+            for( findnodes( '/perlwar/configuration/players/player' ) ) {
+                my $name = $_->findvalue('@name');
+                $players{ $name  } = { color => $_->getAttribute( 'color' ) };
+                $players{ $name }{status} = 'OK';
+                $players{ $names }{score} = 0;
+            }   
+        }
+        else {
+            my( $file ) = findvalue( 
+                '/perlwar/configuration/players/@community' );
+            @player_nodes = grep { -e 'mobil/'.$_->findvalue( '@name' ) }
+                                 XML::LibXML->new
+                                            ->parse_file( $file )
+                                            ->findnodes( '//player' );   
+            for( @player_nodes ) {
+                my $name = $_->findvalue('@name');
+                $players{ $name  } = { color => $_->getAttribute( 'color' ) };
+                $players{ $name }{status} = 'OK';
+                $players{ $names }{score} = 0;
+            }   
+        }
+    }
+
+sub get_players {
+    
+}
+
 
 %>
 
@@ -78,9 +105,9 @@ $t->set( 'entry' => {
 <% for( sort { $players{$b}{score} <=> $players{$a}{score} } keys %players ) { 
 	next unless $_;  %> <!--  remove the blank player    -->
 	<div style="color: <%= $players{$_}{color} %>"
-		<% if( $players{$_}{status} eq 'EOT' ) { %> 
-			class="deadPlayer" 
-		<% } %> 
+        <%=    $players{$_}{status} eq 'EOT' ? 'class="deadPlayer"' 
+             : $players{$_}{status} eq 'w1nn3r' ? 'class="w1nn3r"'
+             : '' -%>
 	>
 	<%= $_ %> <%= $subm{$_} %> <span class="score"><%= $players{$_}{score} || "0" %></span>
 	</div>
@@ -95,7 +122,7 @@ $t->set( 'entry' => {
     use Cwd;
     my $dir = (split '/' => getcwd )[-1];
 %>
-<a href="../upload.epl?game=<%= $dir %>">u/l agent</a>
+<a href=".?style=upload">u/l agent</a>
 <br/><br/>
 <a href=".?passthru=1">raw xml</a>
 
@@ -109,7 +136,7 @@ $t->set( 'entry' => {
 iteration <SELECT name="history_select">
 <%
     opendir my $dir, '.' or die;
-    my @rounds = reverse sort grep /round_\d+\.xml/, readdir $dir;
+    my @rounds = sort grep /^round_\d+\.xml$/, readdir $dir;
     closedir $dir;
 %>
 <% 
@@ -120,7 +147,19 @@ iteration <SELECT name="history_select">
 <%  } 
 %>
 </SELECT>&nbsp;
+
 <input type="submit" value="access" />
+
+<br />
+<br />
+
+<input type="button" value="rwd" 
+    onClick="document.forms[0].elements[0].selectedIndex = 
+    <%-= $iteration - 1 %> ;resolve_iteration();submit()">
+&nbsp;
+<input type="button" value="fwd" 
+    onClick="document.forms[0].elements[0].selectedIndex = 
+    <%-= $iteration + 1 %> ;resolve_iteration();submit()"> <br/>
 </div>
 </form>
 <br/>

@@ -1,1 +1,15 @@
-<configuration><title>game5</title><gameStatus>ongoing</gameStatus><gameLength>97</gameLength><theArraySize>97</theArraySize><snippetMaxLength>67</snippetMaxLength><currentIteration>13</currentIteration><note>blah</note><player password="a" color="lightblue" status="">anja</player><player password="blah" color="" status="EOT">max</player><player password="y" color="pink" status="">yancik</player></configuration>
+<configuration
+><title
+>bob2</title
+><gameLength
+>95</gameLength
+><theArraySize
+>97</theArraySize
+><agentMaxSize
+>67</agentMaxSize
+><players list="predefined"
+><player name="yanick" password="" color="pink"
+ /><player name="bob" password="" color="lightblue"
+ /></players
+></configuration
+>
