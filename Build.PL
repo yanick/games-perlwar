@@ -13,6 +13,13 @@ Module::Build->new(
         'Carp'             => 0,
         'IO::Prompt'       => 0,
         'version'          => 0,
+        'Class::Std'       => 0,
+        'Safe'             => 0,
+        'XML::Writer'      => 0,
+        'XML::LibXML'      => 0,
+        'IO::File'         => 0,
+        'Cwd'              => 0,
+        'File::Copy'       => 0,
     },
     script_files => [ qw# scripts/pwcreate 
                           scripts/pwround 
