@@ -1,10 +1,10 @@
 <%
-$t->{title}{showtag} = 0;
-%>
+    $t->{title}{showtag} = 0;
+-%>
 
 <html>
 <head>
-<TITLE>perlwar : <%= findvalue( '/configuration/title/text()' ) %></TITLE>
+<TITLE>perlwar : <%= findvalue( '//configuration/title/text()' ) %></TITLE>
 <LINK REL="icon" HREF="perlwar.ico" />
 <LINK REL="SHORTCUT ICON" HREF="perlwar.ico" />
 <style>
@@ -20,7 +20,7 @@ dt { font-weight: bold; }
 </head>
 <body>
 
-<h1>PerlWar : <%= findvalue( '/configuration/title/text()' ) %></h1>
+<h1>PerlWar : <%= findvalue( '//configuration/title/text()' ) %></h1>
 
 <% use Games::PerlWar; %>
 <p>using Perlwar version <%= $Games::PerlWar::VERSION %>
@@ -29,17 +29,17 @@ dt { font-weight: bold; }
 <h2>settings</h2>
 
 <dl>
-<dt>Game length<dt><dd><%= findvalue( '/configuration/gameLength/text()' ) %> iterations</dd>
-<dt>Array size</dt><dd><%= findvalue( '/configuration/theArraySize/text()' ) %> cells</dd>
-<dt>Agent maximal size</dt><dd><%= findvalue( '/configuration/snippetMaxLength/text()' ) %> characters</dd>
-<% if ( my $m = findvalue( '/configuration/mamboDecrement/text()' ) ) { %>
+<dt>Game length<dt><dd><%= findvalue( '//configuration/gameLength/text()' ) %> iterations</dd>
+<dt>Array size</dt><dd><%= findvalue( '//configuration/theArraySize/text()' ) %> cells</dd>
+<dt>Agent maximal size</dt><dd><%= findvalue( '//configuration/agentMaxSize/text()' ) %> characters</dd>
+<% if ( my $m = findvalue( '//configuration/mamboDecrement/text()' ) ) { %>
 <dt>mambo option</dt><dd>enabled</dd>
 <dt>mambo decrement per turn</dt><dd><%= $m %></dd>
 <% } %>
 
 </dl>
 
-<% if ( my $n = findvalue( '/configuration/note/text()' ) ) { %>
+<% if ( my $n = findvalue( '//configuration/note/text()' ) ) { %>
 <h2>notes</h2>
 
 <pre><%= $n %></pre>
@@ -49,16 +49,28 @@ dt { font-weight: bold; }
 <h2>Current Status</h2>
 
 <dl>
-<dt>Current iteration<dt><dd><%= findvalue( '/configuration/currentIteration/text()' ) %></dd>
-<dt>Game status</dt><dd><%= findvalue( '/configuration/gameStatus/text()' ) %></dd>
+    <dt>Current iteration<dt>
+    <dd><%= findvalue( '//iteration/@nbr' ) %></dd>
+    <dt>Game status</dt>
+    <dd><%= findvalue( '//iteration/summary/gameStatus/text()' ) %></dd>
 </dl>
 
-<h3>Players</h3>
+
+<%
+    if ( $adhoc = findvalue( '//players/@list' ) eq 'adhoc' ) {
+        @players = findnodes( '//iteration/summary/player' );
+    } 
+    else {
+        @players = findnodes( '//configuration/players/player' );
+    }
+%>
+
+<h3>Players <%= '(ad hoc mode' x !!$adhoc %> </h3>
 
 <dl>
-<% foreach my $p ( findnodes( '/configuration/player' ) ) { %>
-<dt><%= $p->findvalue( './text()' ) %></dt>
-<dd><%= $p->findvalue( './@status' ) || 'active' %></dd>
+<% for my $p ( @players ) { %>
+    <dt><%= $p->findvalue( '@name' ) %></dt>
+    <dd><%= $p->findvalue( '@status' ) || 'active' %></dd>
 <% } %>
 </dl>
 

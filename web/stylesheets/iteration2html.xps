@@ -40,24 +40,21 @@ $t->set( 'entry' => {
 
 <div class="summary">
 <div align="center">
-    iteration <%= findvalue( '/perlwar/round/@number' ) || '0'  %>
+    iteration <%= findvalue( '/perlwar/iteration/@nbr' ) || '0'  %>
 </div>
 <br/>
 <%
 	my %players;
 	$players{''} = { color => 'lightgrey' };
-	for( findnodes( '/perlwar/configuration/player' ) )
+	for( findnodes( '/perlwar/configuration/players/player' ) )
 	{
-		my $name = $_->findvalue('./text()');
+		my $name = $_->findvalue('@name');
 		$players{ $name  } = { color => $_->getAttribute( 'color' ) };
 		$players{ $name }{status} = $_->getAttribute( 'status' );
 		$players{ $names }{score} = 0;
-	}
-
-	for( findnodes( '/perlwar/round/theArray/slot/owner' ) )
-	{
-		my $player = $_->findvalue( './text()' );
-		$players{$player}{score}++;
+        
+        $players{$name}{score} = 
+            findvalue( "//summary/player[\@name = '$name' ]/\@agents" );
 	}
 
 %>
@@ -92,7 +89,7 @@ $t->set( 'entry' => {
 </div>
 
 <div class="gameLinks">
-<a href="configuration.xml">war configuration</a>
+<a href="./?style=config">war configuration</a>
 <br/><br/>
 <% 
     use Cwd;
@@ -110,9 +107,18 @@ $t->set( 'entry' => {
 <div style="margin-left: 10px">
 
 iteration <SELECT name="history_select">
-<% for( reverse 0..findvalue( '/perlwar/configuration/currentIteration/text()' ) ) { %>
-	<option value='<%= sprintf 'round_%05d.xml', $_ %>'><%= $_ %></option> 
-<% } %>
+<%
+    opendir my $dir, '.' or die;
+    my @rounds = reverse sort grep /round_\d+\.xml/, readdir $dir;
+    closedir $dir;
+%>
+<% 
+    for my $r ( @rounds ) {
+        $r =~ /0*(\d+)/; 
+%>
+        <option value='<%= $r %>'><%= $1 %></option> 
+<%  } 
+%>
 </SELECT>&nbsp;
 <input type="submit" value="access" />
 </div>
@@ -135,7 +141,10 @@ my $fill = length findvalue( '/perlwar/configuration/theArraySize/text()' );
 for( 0..findvalue( '/perlwar/configuration/theArraySize/text()' ) -1 ) { %>
 <div name='slot' 
 	class="slot" 
-	style='background-color: <%= $players{ findvalue( "/perlwar/round/theArray/slot[\@id = $_]/owner/text()" ) }{color} %>'  
+	style='background-color: 
+            <%-= $players{ findvalue(
+    "/perlwar/iteration/theArray/agent[\@position = $_]/\@owner" ) }{color} 
+    || 'lightgrey' %>'  
 	onclick="showSlot(<%= $_ %>)">
 <% 
     my $owner = findvalue( "/perlwar/round/theArray/slot[\@id = $_]/owner/text()" );
@@ -156,16 +165,16 @@ for( 0..findvalue( '/perlwar/configuration/theArraySize/text()' ) -1 ) { %>
 <input type="submit" value="show log" onclick="showLog()" />
 <div class="console">
 
-<%= apply_templates( '/perlwar/round/log' ) %>
+<%= apply_templates( '/perlwar/iteration/log' ) %>
 <% 
-    $t->set( 'slot' => {
+    $t->set( 'agent' => {
         testcode => \&tc_slot,
     } ); 
 
     sub tc_slot {
         my( $n, $t ) = @_;
-        my $id = $n->findvalue( '@id' );
-        my $code = $n->findvalue( 'code/text()' );
+        my $id = $n->findvalue( '@position' );
+        my $code = $n->findvalue( 'text()' );
         $t->set({ 
             pre => "<div class='slotCode' name='slotCode' id='code_$id'>$code</div>\n" });
         return DO_SELF_ONLY;
@@ -173,7 +182,17 @@ for( 0..findvalue( '/perlwar/configuration/theArraySize/text()' ) -1 ) { %>
 
 %>
 
-<%~ //slot %>
+<%  
+    for my $i ( 0..findvalue( '//gameLength/text()' )-1 ) {
+        my( $agent ) = findnodes(  "//theArray/agent[\@position = $i ]" );
+
+        my $code = $agent ? $agent->findvalue( 'text()' ) 
+                          : '<i>empty cell</i>';
+%>
+    <div class='slotCode' name='slotCode' id='code_<%= $i %>'><%= $code %></div>
+<% 
+    } 
+%>
 
 </div>
 
