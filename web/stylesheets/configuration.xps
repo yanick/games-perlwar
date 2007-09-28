@@ -65,7 +65,7 @@ dt { font-weight: bold; }
     }
 %>
 
-<h3>Players <%= '(ad hoc mode' x !!$adhoc %> </h3>
+<h3>Players <%= '(ad hoc mode)' x !!$adhoc %> </h3>
 
 <dl>
 <% for my $p ( @players ) { %>
