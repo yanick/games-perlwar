@@ -1,6 +1,6 @@
 package Games::PerlWar;
 
-our $VERSION = '0.02';
+our $VERSION = '0.02_01';
 
 use strict;
 use warnings;
@@ -239,7 +239,7 @@ sub play_round
             push @survivors, $p;
         }
         else {
-            $self->{conf}{player}{status} = 'EOT';
+            $self->{conf}{player}{$p}{status} = 'EOT';
         }
     }
 
