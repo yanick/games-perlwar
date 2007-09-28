@@ -8,6 +8,7 @@ scripts/pwround
 scripts/pwupload
 scripts/perlwar
 t/01general.t
+t/99signature.t
 t/configuration.xml
 t/round_current.xml
 t/pod.t
