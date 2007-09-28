@@ -1,5 +1,8 @@
 Revision history for Perl module Games::PerlWar
 
+0.03
+    * Added Test::Signature test
+
 0.02 - Oct 22, 2006
     * Huge refactoring. The Array, each cell/agent and the
         agent execution have all been pushed to their own 
