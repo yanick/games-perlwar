@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 25;
+use Test::More tests => 26;
 
 use Games::PerlWar;
 
@@ -98,6 +98,7 @@ $pw->array->clear;
 $array->cell(0)->set( { owner => 'neo', code => '$o="morpheus"' } );
 $array->cell(1)->set( { owner => 'smith', code => '$o[1]="neo"' } );
 $array->cell(2)->set( { owner => 'smith', code => '1' } );
+$array->cell(3)->set( { owner => 'neo', code => '$O' } );
 
 $pw->runSlot(0);
 is $array->cell(0)->get_facade => 'morpheus', 
@@ -105,6 +106,9 @@ is $array->cell(0)->get_facade => 'morpheus',
 $pw->runSlot(1);
 is $array->cell(2)->get_facade => 'smith', 
     'but not the facade of another agent';
+
+$pw->runSlot(3);
+is $array->cell(3)->run->return_value => 'neo', 'agent can access $O';
 
 $pw->array->clear;
 $array->cell(0)->set( { owner => 'neo', code => '$x="pass it on"' } );
