@@ -2,6 +2,7 @@ Revision history for Perl module Games::PerlWar
 
 0.03
     * Added Test::Signature test
+    * Added git repository URL to CONTACT section of G::PW.
 
 0.02 - Oct 22, 2006
     * Huge refactoring. The Array, each cell/agent and the
