@@ -1,3 +1,4 @@
+- add repository url in pod
 - can only use an existing player as a facade
 - use variable $o to set facade
 - add logs to say that an agent change facade
