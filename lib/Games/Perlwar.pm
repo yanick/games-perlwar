@@ -861,6 +861,14 @@ I<pwround> isn't interactive and can easily be called from a cron job.
 I<pwupload> currently only works for local games. It will be
 soonishly extended to allow submissions to network games.
 
+=head1 CONTACTS
+
+For bug reports, please use the CPAN request tracker on
+http://rt.cpan.org/NoAuth/Bugs.html?Dist=Games-Perlwar.
+
+The Games::Perlwar git repository can be found
+at http://babyl.dyndns.org/git/perlwar.git.
+
 =head1 AUTHOR
 
 Yanick Champoux (yanick@perl.org)
