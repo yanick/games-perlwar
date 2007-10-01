@@ -2,19 +2,19 @@ use strict;
 use warnings;
 use Test::More tests => 26;
 
-use Games::PerlWar;
+use Games::Perlwar;
 
-ok(1); # So we can load PerlWar. Yay!
+ok(1); # So we can load Perlwar. Yay!
 
-my $pw = new Games::PerlWar( 't' );
+my $pw = new Games::Perlwar( 't' );
 $pw->load;
 
 ok(1);  # game loaded
 
 my( $result, $error, @Array );
 
-use Games::PerlWar::Cell;
-my $cell = Games::PerlWar::Cell->new;
+use Games::Perlwar::Cell;
+my $cell = Games::Perlwar::Cell->new;
 
 $cell->set_code( '"hello world!"' );
 

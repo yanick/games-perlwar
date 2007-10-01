@@ -1,4 +1,4 @@
-package Games::PerlWar::Array;
+package Games::Perlwar::Array;
 
 our $VERSION = '0.02';
 
@@ -8,7 +8,7 @@ use Carp;
 use utf8;
 
 use Class::Std;
-use Games::PerlWar::Cell;
+use Games::Perlwar::Cell;
 
 my %cells_of          ;
 my %size_of           : ATTR( :name<size> :default<100> );
@@ -20,7 +20,7 @@ sub START {
 
     my @cells;
 
-    push @cells, Games::PerlWar::Cell->new for 1..$size_of{ $id };
+    push @cells, Games::Perlwar::Cell->new for 1..$size_of{ $id };
 
     $cells_of{ $id } = \@cells;
 }

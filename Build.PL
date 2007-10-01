@@ -6,7 +6,7 @@ Module::Build->new(
     module_name         => 'Games::Perlwar',
     license             => 'perl',
     dist_author         => 'Yanick Champoux <yanick@cpan.org>',
-    dist_version_from   => 'lib/Games/PerlWar.pm',
+    dist_version_from   => 'lib/Games/Perlwar.pm',
     build_requires => {
         'XML::Simple'      => 0,
         'File::Copy'       => 0,
@@ -28,7 +28,7 @@ Module::Build->new(
     create_makefile_pl  => 'traditional',
     sign            => 1,
     dist_abstract   => <<END_ABSTRACT,
-PerlWar is inspired by the classic Corewar game.
+Perlwar is inspired by the classic Corewar game.
 In this game, players pit snippets of Perl code (called 'agents') 
 against each other in order to gain control of the vicious virtual
 battlefield known as... the Array.

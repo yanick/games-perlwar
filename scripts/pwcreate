@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Games::PerlWar;
+use Games::Perlwar;
 use XML::Simple;
 use File::Copy;
 use IO::Prompt;
@@ -26,9 +26,9 @@ mkdir "history" or die "couldn't create directory history:$!\n";
 
 mkdir 'mobil' or die "couldn't create directory mobil:$!\n";
 
-my ( $location ) = grep -d "$_/Games/PerlWar/web", @INC or die "no installation of PerlWar found\n";
+my ( $location ) = grep -d "$_/Games/Perlwar/web", @INC or die "no installation of Perlwar found\n";
 
-$location = "$location/Games/PerlWar/web";
+$location = "$location/Games/Perlwar/web";
 
 copy( "$location/htaccess", ".htaccess" ) or die "coudn't copy .htaccess: $!\n";
 for( qw/ submit.epl perlwar.ico upload.epl upload.html/ )
@@ -89,7 +89,7 @@ $conf{note} .= $_ while length( $_ = prompt );
 
 print "saving configuration..\n";
 
-Games::PerlWar::saveConfiguration( %conf );
+Games::Perlwar::saveConfiguration( %conf );
 
 print "creating round 0.. \n";
 
@@ -115,7 +115,7 @@ __END__
 
 =head1 NAME
 
-pwcreate - create a new PerlWar game directory
+pwcreate - create a new Perlwar game directory
 
 =head1 SYNOPSIS
 
@@ -125,7 +125,7 @@ pwcreate [ I<game_dir> ]
 
 Creates the directory I<game_dir> and populate it with 
 all the files and sub-directories needed for a
-PerlWar game. If I<game_dir> is not specified,
+Perlwar game. If I<game_dir> is not specified,
 'game' is assumed by default. 
 
 =head1 BUGS AND LIMITATIONS

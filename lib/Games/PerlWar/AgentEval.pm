@@ -1,4 +1,4 @@
-package Games::PerlWar::AgentEval;
+package Games::Perlwar::AgentEval;
 
 use strict;
 use warnings;
@@ -129,4 +129,4 @@ sub return_value {
     return $return_value_of{ $id }; 
 }
 
-'end of package Games::PerlWar::AgentEval';
+'end of package Games::Perlwar::AgentEval';

@@ -1,6 +1,6 @@
 =head1 NAME
 
-Games::PerlWar - A Perl variant of the classic Corewar game
+Games::Perlwar - A Perl variant of the classic Corewar game
 
 
 =head1 DESCRIPTION
@@ -10,7 +10,7 @@ Games::PerlWar - A Perl variant of the classic Corewar game
 	these rules are no different than the rules of a computer system. Some of 
 	them can be bent, others can be broken.  - Morpheus
 
-PerlWar is inspired by the classic L<http://www.corewar.info/|Corewar> game.
+Perlwar is inspired by the classic L<http://www.corewar.info/|Corewar> game.
 In this game, players pit snippets of Perl code (called 'agents') against each other in order to
 gain control of the vicious virtual battlefield known as... the Array.
 
@@ -193,10 +193,10 @@ In this variant, the agent maximal size is decremented after each turn.
 
 =head1 VERSION
 
-This document describes the rules of PerlWar as implemented 
-in Games::PerlWar v0.02.
+This document describes the rules of Perlwar as implemented 
+in Games::Perlwar v0.02.
 
 
 =cut
 
-'end of Games::PerlWar::Rules'
+'end of Games::Perlwar::Rules';

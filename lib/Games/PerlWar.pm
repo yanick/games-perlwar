@@ -1,4 +1,4 @@
-package Games::PerlWar;
+package Games::Perlwar;
 
 our $VERSION = '0.02_01';
 
@@ -12,9 +12,9 @@ use XML::Writer;
 use XML::LibXML;
 use IO::File;
 
-use Games::PerlWar::Array;
-use Games::PerlWar::Cell;
-use Games::PerlWar::AgentEval;
+use Games::Perlwar::Array;
+use Games::Perlwar::Cell;
+use Games::Perlwar::AgentEval;
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -128,7 +128,7 @@ sub load {
 
     $self->{conf}{theArraySize} = 
         $config->findvalue( '/configuration/theArraySize/text()' );
-	$self->{theArray} = Games::PerlWar::Array->new({ 
+	$self->{theArray} = Games::Perlwar::Array->new({ 
                             size => $self->{conf}{theArraySize} });
     $self->{theArray}->load_from_xml( $current_iteration );
 
@@ -789,7 +789,7 @@ sub agent_census {
 
 =begin notes
 
-my $pw = new Games::PerlWar;
+my $pw = new Games::Perlwar;
 
 $pw->{interactive} = 1;
 $pw->{theArray} = [ { owner => 'Yanick', name => 'Neo', code => 'print "Hello world!"' },
@@ -822,11 +822,11 @@ __END__
 
 =head1 NAME
 
-Games::PerlWar - A Perl variant of the classic Corewar game
+Games::Perlwar - A Perl variant of the classic Corewar game
 
 =head1 DESCRIPTION
 
-For the rules of PerlWar, please refers to the Games::PerlWar::Rules manpage.
+For the rules of Perlwar, please refers to the Games::Perlwar::Rules manpage.
 
 =head1 HOW TO START AND MANAGE A PW GAME (THE SHORT AND SKINNY)
 

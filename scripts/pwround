@@ -9,7 +9,7 @@
 use strict;
 use warnings;
 
-use Games::PerlWar;
+use Games::Perlwar;
 
 sub usage {
     return "usage: $0 <game_directory>\n"
@@ -24,7 +24,7 @@ unless( -d $game_directory ) {
     die usage();
 }
 
-my $pw = new Games::PerlWar( $game_directory );
+my $pw = new Games::Perlwar( $game_directory );
 
 $pw->load;
 $pw->play_round;

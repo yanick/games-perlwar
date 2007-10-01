@@ -1,4 +1,4 @@
-package Games::PerlWar::Shell;
+package Games::Perlwar::Shell;
 
 use strict;
 use warnings;
@@ -6,7 +6,7 @@ use warnings;
 our $VERSION = '0.02';
 
 use Cwd;
-use Games::PerlWar;
+use Games::Perlwar;
 use XML::Simple;
 use File::Copy;
 use IO::Prompt;
@@ -22,12 +22,12 @@ my @colors = qw( pink lightblue yellow lime maroon purple
 my $shell = Term::ShellUI->new(
     commands => {
         load => {
-            desc => "load a PerlWar game",
+            desc => "load a Perlwar game",
             maxargs => 2,
             proc => \&do_load,
         },
         save => {
-            desc => "save the current PerlWar game",
+            desc => "save the current Perlwar game",
             maxargs => 1,
             proc => \&do_save,
         },
@@ -217,7 +217,7 @@ sub do_create {
 
     print "\ngame '$game_name' created\n";
 
-    $pw = Games::PerlWar->new( '.' );
+    $pw = Games::Perlwar->new( '.' );
     $pw->load;
 }
 
@@ -234,7 +234,7 @@ sub do_load {
         return unless $r;
     }
 
-    $pw = Games::PerlWar->new( $dir );
+    $pw = Games::Perlwar->new( $dir );
     $pw->load( $iteration );
 }
 
