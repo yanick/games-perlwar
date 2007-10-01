@@ -1,0 +1,10 @@
+(
+    'lib/Games/Perlwar.pm' => [ qr/\$VERSION\s*=\s*'(.*?)';/, 
+                             qr/This document describes \S+ version (\S*)/ ],
+    'lib/Games/Perlwar/AgentEval.pm' => [ qr/\$VERSION\s*=\s*'(.*?)';/,  ],
+    'lib/Games/Perlwar/Array.pm' => [ qr/\$VERSION\s*=\s*'(.*?)';/,  ],
+    'lib/Games/Perlwar/Cell.pm' => [ qr/\$VERSION\s*=\s*'(.*?)';/,  ],
+    'lib/Games/Perlwar/Rules.pod' => [ qr/in Games::Perlwar v(.*)\./,  ],
+    'lib/Games/Perlwar/Shell.pm' => [ qr/\$VERSION\s*=\s*'(.*?)';/,  ],
+    'README' => qr/Games::Perlwar version (\S+)/,
+);
