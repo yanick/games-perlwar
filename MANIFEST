@@ -12,12 +12,12 @@ t/99signature.t
 t/configuration.xml
 t/round_current.xml
 t/pod.t
-lib/Games/PerlWar.pm
-lib/Games/PerlWar/Rules.pod
-lib/Games/PerlWar/Array.pm
-lib/Games/PerlWar/Cell.pm
-lib/Games/PerlWar/Shell.pm
-lib/Games/PerlWar/AgentEval.pm
+lib/Games/Perlwar.pm
+lib/Games/Perlwar/Rules.pod
+lib/Games/Perlwar/Array.pm
+lib/Games/Perlwar/Cell.pm
+lib/Games/Perlwar/Shell.pm
+lib/Games/Perlwar/AgentEval.pm
 META.yml                                 Module meta-data (added by MakeMaker)
 web/htaccess
 web/line.png

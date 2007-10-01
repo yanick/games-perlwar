@@ -194,7 +194,7 @@ In this variant, the agent maximal size is decremented after each turn.
 =head1 VERSION
 
 This document describes the rules of Perlwar as implemented 
-in Games::Perlwar v0.02.
+in Games::Perlwar v0.03.
 
 
 =cut
