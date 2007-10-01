@@ -1,0 +1,7 @@
+*.tar.gz
+Build
+META.yml
+Makefile.PL
+_build
+blib
+*.swp
